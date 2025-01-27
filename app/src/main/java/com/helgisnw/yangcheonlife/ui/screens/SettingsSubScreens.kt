@@ -2,6 +2,8 @@ package com.helgisnw.yangcheonlife.ui.screens
 
 import android.content.SharedPreferences
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -99,7 +101,6 @@ fun ClassAndGradeSettings() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Save changes notice
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -107,9 +108,9 @@ fun ClassAndGradeSettings() {
         ) {
             ListItem(
                 headlineContent = {
-                    Text(stringResource(R.string.settings_save_notice))
+                    Text(stringResource(R.string.changes_saved))
                 },
-                leadingContent = { Icon(Icons.Default.Info, contentDescription = null) }
+                leadingContent = { Icon(Icons.Filled.CheckCircle, contentDescription = null) }
             )
         }
     }
@@ -244,7 +245,6 @@ fun SubjectSelectionSettings() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Save changes notice
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -252,9 +252,9 @@ fun SubjectSelectionSettings() {
         ) {
             ListItem(
                 headlineContent = {
-                    Text(stringResource(R.string.settings_save_notice))
+                    Text(stringResource(R.string.changes_saved))
                 },
-                leadingContent = { Icon(Icons.Default.Info, contentDescription = null) }
+                leadingContent = { Icon(Icons.Filled.CheckCircle, contentDescription = null) }
             )
         }
     }

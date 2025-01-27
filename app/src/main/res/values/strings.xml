@@ -55,7 +55,7 @@
     <string name="dialog_yes">예</string>
     <string name="dialog_no">아니오</string>
     <string name="dialog_cancel">취소</string>
-
+    <string name="changes_saved">변경사항이 자동으로 저장됩니다</string>
     <!-- Time Periods -->
     <string name="time_period_1">08:20 ~ 09:10</string>
     <string name="time_period_2">09:20 ~ 10:10</string>

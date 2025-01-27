@@ -5,7 +5,7 @@
     <!-- Initial Setup -->
     <string name="initial_setup">초기 설정</string>
     <string name="done">완료</string>
-
+    <string name="changes_saved">변경사항이 자동으로 저장됩니다</string>
     <!-- Class Settings -->
     <string name="class_settings">학년/반 설정</string>
     <string name="grade">학년</string>
