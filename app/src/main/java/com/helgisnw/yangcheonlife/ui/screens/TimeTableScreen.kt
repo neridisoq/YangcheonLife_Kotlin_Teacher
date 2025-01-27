@@ -59,11 +59,12 @@ fun TimeTableScreen(
     val screenWidth = configuration.screenWidthDp.dp - 32.dp // 좌우 패딩 16dp씩 제외
     val screenHeight = configuration.screenHeightDp.dp
 
-    // Time table total height calculation (top bar height + grade/class selection area height + padding)
+    // Time table total height calculation (top bar height + grade/class selection area height + bottom navigation)
     val topBarHeight = 56.dp
     val selectionAreaHeight = 80.dp
-    val totalVerticalPadding = 48.dp // Total top and bottom padding
-    val availableHeight = screenHeight - topBarHeight - selectionAreaHeight - totalVerticalPadding
+    val bottomNavHeight = 80.dp // Approximate height of bottom navigation bar
+    val totalVerticalPadding = 16.dp // Reduced padding
+    val availableHeight = screenHeight - topBarHeight - selectionAreaHeight - bottomNavHeight - totalVerticalPadding
 
     // Cell size calculation
     val cellSize = minOf(
