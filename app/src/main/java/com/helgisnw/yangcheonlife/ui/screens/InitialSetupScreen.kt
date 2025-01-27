@@ -26,6 +26,12 @@ fun InitialSetupScreen() {
     var selectedSubjectC by remember { mutableStateOf("없음") }
     var selectedSubjectD by remember { mutableStateOf("없음") }
 
+    var expandedGrade by remember { mutableStateOf(false) }
+    var expandedClass by remember { mutableStateOf(false) }
+    var expandedSubjectB by remember { mutableStateOf(false) }
+    var expandedSubjectC by remember { mutableStateOf(false) }
+    var expandedSubjectD by remember { mutableStateOf(false) }
+
     val subjects = listOf(
         "없음", "물리", "화학", "생명과학", "지구과학", "윤사", "정치와 법",
         "경제", "세계사", "한국지리", "탐구B", "탐구C", "탐구D"
@@ -57,8 +63,8 @@ fun InitialSetupScreen() {
 
                 // Grade Selection
                 ExposedDropdownMenuBox(
-                    expanded = false,
-                    onExpandedChange = { },
+                    expanded = expandedGrade,
+                    onExpandedChange = { expandedGrade = !expandedGrade },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
@@ -66,19 +72,23 @@ fun InitialSetupScreen() {
                         onValueChange = { },
                         readOnly = true,
                         label = { Text(stringResource(R.string.grade)) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedGrade) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor()
                     )
 
-                    DropdownMenu(
-                        expanded = false,
-                        onDismissRequest = { }
+                    ExposedDropdownMenu(
+                        expanded = expandedGrade,
+                        onDismissRequest = { expandedGrade = false }
                     ) {
                         (1..3).forEach { grade ->
                             DropdownMenuItem(
                                 text = { Text(String.format(stringResource(R.string.grade_format), grade)) },
-                                onClick = { selectedGrade = grade }
+                                onClick = {
+                                    selectedGrade = grade
+                                    expandedGrade = false
+                                }
                             )
                         }
                     }
@@ -88,8 +98,8 @@ fun InitialSetupScreen() {
 
                 // Class Selection
                 ExposedDropdownMenuBox(
-                    expanded = false,
-                    onExpandedChange = { },
+                    expanded = expandedClass,
+                    onExpandedChange = { expandedClass = !expandedClass },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
@@ -97,19 +107,23 @@ fun InitialSetupScreen() {
                         onValueChange = { },
                         readOnly = true,
                         label = { Text(stringResource(R.string.classroom)) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedClass) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor()
                     )
 
-                    DropdownMenu(
-                        expanded = false,
-                        onDismissRequest = { }
+                    ExposedDropdownMenu(
+                        expanded = expandedClass,
+                        onDismissRequest = { expandedClass = false }
                     ) {
                         (1..11).forEach { classNum ->
                             DropdownMenuItem(
                                 text = { Text(String.format(stringResource(R.string.classroom_format), classNum)) },
-                                onClick = { selectedClass = classNum }
+                                onClick = {
+                                    selectedClass = classNum
+                                    expandedClass = false
+                                }
                             )
                         }
                     }
@@ -133,8 +147,8 @@ fun InitialSetupScreen() {
 
                 // Subject B Selection
                 ExposedDropdownMenuBox(
-                    expanded = false,
-                    onExpandedChange = { },
+                    expanded = expandedSubjectB,
+                    onExpandedChange = { expandedSubjectB = !expandedSubjectB },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
@@ -142,19 +156,23 @@ fun InitialSetupScreen() {
                         onValueChange = { },
                         readOnly = true,
                         label = { Text(stringResource(R.string.subject_b)) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSubjectB) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor()
                     )
 
-                    DropdownMenu(
-                        expanded = false,
-                        onDismissRequest = { }
+                    ExposedDropdownMenu(
+                        expanded = expandedSubjectB,
+                        onDismissRequest = { expandedSubjectB = false }
                     ) {
                         subjects.forEach { subject ->
                             DropdownMenuItem(
                                 text = { Text(subject) },
-                                onClick = { selectedSubjectB = subject }
+                                onClick = {
+                                    selectedSubjectB = subject
+                                    expandedSubjectB = false
+                                }
                             )
                         }
                     }
@@ -164,8 +182,8 @@ fun InitialSetupScreen() {
 
                 // Subject C Selection
                 ExposedDropdownMenuBox(
-                    expanded = false,
-                    onExpandedChange = { },
+                    expanded = expandedSubjectC,
+                    onExpandedChange = { expandedSubjectC = !expandedSubjectC },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
@@ -173,19 +191,23 @@ fun InitialSetupScreen() {
                         onValueChange = { },
                         readOnly = true,
                         label = { Text(stringResource(R.string.subject_c)) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSubjectC) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor()
                     )
 
-                    DropdownMenu(
-                        expanded = false,
-                        onDismissRequest = { }
+                    ExposedDropdownMenu(
+                        expanded = expandedSubjectC,
+                        onDismissRequest = { expandedSubjectC = false }
                     ) {
                         subjects.forEach { subject ->
                             DropdownMenuItem(
                                 text = { Text(subject) },
-                                onClick = { selectedSubjectC = subject }
+                                onClick = {
+                                    selectedSubjectC = subject
+                                    expandedSubjectC = false
+                                }
                             )
                         }
                     }
@@ -195,8 +217,8 @@ fun InitialSetupScreen() {
 
                 // Subject D Selection
                 ExposedDropdownMenuBox(
-                    expanded = false,
-                    onExpandedChange = { },
+                    expanded = expandedSubjectD,
+                    onExpandedChange = { expandedSubjectD = !expandedSubjectD },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
@@ -204,19 +226,23 @@ fun InitialSetupScreen() {
                         onValueChange = { },
                         readOnly = true,
                         label = { Text(stringResource(R.string.subject_d)) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSubjectD) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor()
                     )
 
-                    DropdownMenu(
-                        expanded = false,
-                        onDismissRequest = { }
+                    ExposedDropdownMenu(
+                        expanded = expandedSubjectD,
+                        onDismissRequest = { expandedSubjectD = false }
                     ) {
                         subjects.forEach { subject ->
                             DropdownMenuItem(
                                 text = { Text(subject) },
-                                onClick = { selectedSubjectD = subject }
+                                onClick = {
+                                    selectedSubjectD = subject
+                                    expandedSubjectD = false
+                                }
                             )
                         }
                     }

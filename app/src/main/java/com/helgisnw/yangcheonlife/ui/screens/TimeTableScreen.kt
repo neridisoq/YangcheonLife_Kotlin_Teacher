@@ -38,6 +38,9 @@ fun TimeTableScreen(
     var selectedSubjectC by remember { mutableStateOf(prefs.getString("selectedSubjectC", "탐구C") ?: "탐구C") }
     var selectedSubjectD by remember { mutableStateOf(prefs.getString("selectedSubjectD", "탐구D") ?: "탐구D") }
 
+    var expandedGrade by remember { mutableStateOf(false) }
+    var expandedClass by remember { mutableStateOf(false) }
+
     val scheduleState by viewModel.scheduleState.collectAsState()
     val cellBackgroundColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
 
@@ -55,23 +58,73 @@ fun TimeTableScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            OutlinedTextField(
-                value = String.format(stringResource(R.string.grade_format), selectedGrade),
-                onValueChange = { },
-                readOnly = true,
-                label = { Text(stringResource(R.string.grade)) },
+            ExposedDropdownMenuBox(
+                expanded = expandedGrade,
+                onExpandedChange = { expandedGrade = !expandedGrade },
                 modifier = Modifier.weight(1f)
-            )
+            ) {
+                OutlinedTextField(
+                    value = String.format(stringResource(R.string.grade_format), selectedGrade),
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.grade)) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedGrade) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expandedGrade,
+                    onDismissRequest = { expandedGrade = false }
+                ) {
+                    (1..3).forEach { grade ->
+                        DropdownMenuItem(
+                            text = { Text(String.format(stringResource(R.string.grade_format), grade)) },
+                            onClick = {
+                                selectedGrade = grade
+                                expandedGrade = false
+                                prefs.edit().putInt("defaultGrade", grade).apply()
+                            }
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            OutlinedTextField(
-                value = String.format(stringResource(R.string.classroom_format), selectedClass),
-                onValueChange = { },
-                readOnly = true,
-                label = { Text(stringResource(R.string.classroom)) },
+            ExposedDropdownMenuBox(
+                expanded = expandedClass,
+                onExpandedChange = { expandedClass = !expandedClass },
                 modifier = Modifier.weight(1f)
-            )
+            ) {
+                OutlinedTextField(
+                    value = String.format(stringResource(R.string.classroom_format), selectedClass),
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.classroom)) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedClass) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expandedClass,
+                    onDismissRequest = { expandedClass = false }
+                ) {
+                    (1..11).forEach { classNum ->
+                        DropdownMenuItem(
+                            text = { Text(String.format(stringResource(R.string.classroom_format), classNum)) },
+                            onClick = {
+                                selectedClass = classNum
+                                expandedClass = false
+                                prefs.edit().putInt("defaultClass", classNum).apply()
+                            }
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.width(8.dp))
 

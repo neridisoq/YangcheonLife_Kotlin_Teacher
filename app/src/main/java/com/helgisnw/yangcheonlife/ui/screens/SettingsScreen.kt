@@ -3,7 +3,6 @@ package com.helgisnw.yangcheonlife.ui.screens
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -20,7 +19,6 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.messaging.FirebaseMessaging
 import com.helgisnw.yangcheonlife.R
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen() {
     val navController = rememberNavController()
@@ -42,7 +40,7 @@ fun SettingsScreen() {
 @Composable
 private fun SettingsMainContent(navController: androidx.navigation.NavController) {
     val context = LocalContext.current
-    val prefs = context.getSharedPreferences("app_settings", android.content.Context.MODE_PRIVATE)
+    val prefs = remember { context.getSharedPreferences("app_settings", android.content.Context.MODE_PRIVATE) }
 
     var notificationsEnabled by remember {
         mutableStateOf(prefs.getBoolean("notificationsEnabled", true))
