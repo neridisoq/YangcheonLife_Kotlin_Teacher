@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.util.*
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class TimeTableViewModel : ViewModel() {
     private val repository = ScheduleRepository()
@@ -36,6 +38,50 @@ class TimeTableViewModel : ViewModel() {
         }
     }
 
+    fun isCurrentPeriod(period: Int, dayOfWeek: Int): Boolean {
+        val calendar = Calendar.getInstance()
+        val currentDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+
+        // Calendar.MONDAY is 2, but our dayOfWeek parameter starts from 1
+        // So we need to add 1 to match the Calendar system
+        if (currentDayOfWeek != dayOfWeek + 1 || currentDayOfWeek < Calendar.MONDAY || currentDayOfWeek > Calendar.FRIDAY) {
+            return false
+        }
+
+        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val currentTime = calendar.time
+        val (startTimeStr, endTimeStr) = periodTimes[period - 1]
+
+        try {
+            val periodStart = timeFormat.parse(startTimeStr)
+            val periodEnd = timeFormat.parse(endTimeStr)
+
+            // Set the dates to the same day for proper comparison
+            val currentTimeCalendar = Calendar.getInstance().apply {
+                time = currentTime
+            }
+
+            val startCalendar = Calendar.getInstance().apply {
+                time = periodStart!!
+                set(Calendar.YEAR, currentTimeCalendar.get(Calendar.YEAR))
+                set(Calendar.MONTH, currentTimeCalendar.get(Calendar.MONTH))
+                set(Calendar.DAY_OF_MONTH, currentTimeCalendar.get(Calendar.DAY_OF_MONTH))
+            }
+
+            val endCalendar = Calendar.getInstance().apply {
+                time = periodEnd!!
+                set(Calendar.YEAR, currentTimeCalendar.get(Calendar.YEAR))
+                set(Calendar.MONTH, currentTimeCalendar.get(Calendar.MONTH))
+                set(Calendar.DAY_OF_MONTH, currentTimeCalendar.get(Calendar.DAY_OF_MONTH))
+            }
+
+            return currentTime.time >= startCalendar.timeInMillis &&
+                    currentTime.time <= endCalendar.timeInMillis
+        } catch (e: Exception) {
+            return false
+        }
+    }
+
     fun getDayOfWeek(index: Int): String {
         return when (index) {
             0 -> "월"
@@ -49,26 +95,5 @@ class TimeTableViewModel : ViewModel() {
 
     fun getPeriodTime(period: Int): Pair<String, String> {
         return periodTimes.getOrNull(period - 1) ?: ("" to "")
-    }
-
-    fun isCurrentPeriod(period: Int, dayOfWeek: Int): Boolean {
-        val calendar = Calendar.getInstance()
-        val currentDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - Calendar.MONDAY
-
-        if (currentDayOfWeek != dayOfWeek - 1 || currentDayOfWeek < 0 || currentDayOfWeek > 4) {
-            return false
-        }
-
-        val currentTime = calendar.time
-        val timeFormat = java.text.SimpleDateFormat("HH:mm", Locale.getDefault())
-        val (startTime, endTime) = getPeriodTime(period)
-
-        return try {
-            val periodStart = timeFormat.parse(startTime)
-            val periodEnd = timeFormat.parse(endTime)
-            currentTime in periodStart..periodEnd
-        } catch (e: Exception) {
-            false
-        }
     }
 }
