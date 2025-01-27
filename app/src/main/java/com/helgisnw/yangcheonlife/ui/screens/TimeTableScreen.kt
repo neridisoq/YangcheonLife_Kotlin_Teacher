@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.helgisnw.yangcheonlife.R
 import com.helgisnw.yangcheonlife.data.model.ScheduleItem
+import com.helgisnw.yangcheonlife.ui.components.TopBar
 import com.helgisnw.yangcheonlife.ui.viewmodel.TimeTableViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,118 +49,125 @@ fun TimeTableScreen(
         viewModel.loadSchedule(selectedGrade, selectedClass)
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            ExposedDropdownMenuBox(
-                expanded = expandedGrade,
-                onExpandedChange = { expandedGrade = !expandedGrade },
-                modifier = Modifier.weight(1f)
-            ) {
-                OutlinedTextField(
-                    value = String.format(stringResource(R.string.grade_format), selectedGrade),
-                    onValueChange = { },
-                    readOnly = true,
-                    label = { Text(stringResource(R.string.grade)) },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedGrade) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
-                )
-
-                ExposedDropdownMenu(
-                    expanded = expandedGrade,
-                    onDismissRequest = { expandedGrade = false }
-                ) {
-                    (1..3).forEach { grade ->
-                        DropdownMenuItem(
-                            text = { Text(String.format(stringResource(R.string.grade_format), grade)) },
-                            onClick = {
-                                selectedGrade = grade
-                                expandedGrade = false
-                                prefs.edit().putInt("defaultGrade", grade).apply()
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            ExposedDropdownMenuBox(
-                expanded = expandedClass,
-                onExpandedChange = { expandedClass = !expandedClass },
-                modifier = Modifier.weight(1f)
-            ) {
-                OutlinedTextField(
-                    value = String.format(stringResource(R.string.classroom_format), selectedClass),
-                    onValueChange = { },
-                    readOnly = true,
-                    label = { Text(stringResource(R.string.classroom)) },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedClass) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
-                )
-
-                ExposedDropdownMenu(
-                    expanded = expandedClass,
-                    onDismissRequest = { expandedClass = false }
-                ) {
-                    (1..11).forEach { classNum ->
-                        DropdownMenuItem(
-                            text = { Text(String.format(stringResource(R.string.classroom_format), classNum)) },
-                            onClick = {
-                                selectedClass = classNum
-                                expandedClass = false
-                                prefs.edit().putInt("defaultClass", classNum).apply()
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            IconButton(onClick = { viewModel.loadSchedule(selectedGrade, selectedClass) }) {
-                Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.refresh))
-            }
+    Scaffold(
+        topBar = {
+            TopBar(title = stringResource(R.string.timetable))
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(6),
-            modifier = Modifier.fillMaxSize()
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp)
         ) {
-            // Header row
-            items(6) { col ->
-                HeaderCell(col)
-            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ExposedDropdownMenuBox(
+                    expanded = expandedGrade,
+                    onExpandedChange = { expandedGrade = !expandedGrade },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    OutlinedTextField(
+                        value = String.format(stringResource(R.string.grade_format), selectedGrade),
+                        onValueChange = { },
+                        readOnly = true,
+                        label = { Text(stringResource(R.string.grade)) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedGrade) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
 
-            // Time slots and schedule
-            repeat(7) { row ->
-                item {
-                    TimeSlotCell(row + 1)
+                    ExposedDropdownMenu(
+                        expanded = expandedGrade,
+                        onDismissRequest = { expandedGrade = false }
+                    ) {
+                        (1..3).forEach { grade ->
+                            DropdownMenuItem(
+                                text = { Text(String.format(stringResource(R.string.grade_format), grade)) },
+                                onClick = {
+                                    selectedGrade = grade
+                                    expandedGrade = false
+                                    prefs.edit().putInt("defaultGrade", grade).apply()
+                                }
+                            )
+                        }
+                    }
                 }
 
-                items(5) { col ->
-                    val scheduleItem = scheduleState.getOrNull(col)?.getOrNull(row)
-                    ScheduleCell(
-                        scheduleItem = scheduleItem,
-                        isCurrentPeriod = viewModel.isCurrentPeriod(row + 1, col + 1),
-                        backgroundColor = cellBackgroundColor,
-                        selectedSubjectB = selectedSubjectB,
-                        selectedSubjectC = selectedSubjectC,
-                        selectedSubjectD = selectedSubjectD
+                Spacer(modifier = Modifier.width(8.dp))
+
+                ExposedDropdownMenuBox(
+                    expanded = expandedClass,
+                    onExpandedChange = { expandedClass = !expandedClass },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    OutlinedTextField(
+                        value = String.format(stringResource(R.string.classroom_format), selectedClass),
+                        onValueChange = { },
+                        readOnly = true,
+                        label = { Text(stringResource(R.string.classroom)) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedClass) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
                     )
+
+                    ExposedDropdownMenu(
+                        expanded = expandedClass,
+                        onDismissRequest = { expandedClass = false }
+                    ) {
+                        (1..11).forEach { classNum ->
+                            DropdownMenuItem(
+                                text = { Text(String.format(stringResource(R.string.classroom_format), classNum)) },
+                                onClick = {
+                                    selectedClass = classNum
+                                    expandedClass = false
+                                    prefs.edit().putInt("defaultClass", classNum).apply()
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                IconButton(onClick = { viewModel.loadSchedule(selectedGrade, selectedClass) }) {
+                    Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.refresh))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(6),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Header row
+                items(6) { col ->
+                    HeaderCell(col)
+                }
+
+                // Time slots and schedule
+                repeat(7) { row ->
+                    item {
+                        TimeSlotCell(row + 1)
+                    }
+
+                    items(5) { col ->
+                        val scheduleItem = scheduleState.getOrNull(col)?.getOrNull(row)
+                        ScheduleCell(
+                            scheduleItem = scheduleItem,
+                            isCurrentPeriod = viewModel.isCurrentPeriod(row + 1, col + 1),
+                            backgroundColor = cellBackgroundColor,
+                            selectedSubjectB = selectedSubjectB,
+                            selectedSubjectC = selectedSubjectC,
+                            selectedSubjectD = selectedSubjectD
+                        )
+                    }
                 }
             }
         }
@@ -185,7 +193,7 @@ private fun HeaderCell(col: Int) {
             },
             modifier = Modifier
                 .fillMaxSize()
-                .padding(4.dp),
+                .wrapContentHeight(Alignment.CenterVertically),
             textAlign = TextAlign.Center
         )
     }
@@ -208,11 +216,13 @@ private fun TimeSlotCell(period: Int) {
         ) {
             Text(
                 text = String.format(stringResource(R.string.period_format), period),
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center
             )
             Text(
-                text = stringResource(getTimePeriodResource(period)),
-                style = MaterialTheme.typography.bodySmall
+                text = getStartTime(period),
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -263,15 +273,15 @@ private fun ScheduleCell(
     }
 }
 
-private fun getTimePeriodResource(period: Int): Int {
+private fun getStartTime(period: Int): String {
     return when (period) {
-        1 -> R.string.time_period_1
-        2 -> R.string.time_period_2
-        3 -> R.string.time_period_3
-        4 -> R.string.time_period_4
-        5 -> R.string.time_period_5
-        6 -> R.string.time_period_6
-        7 -> R.string.time_period_7
-        else -> R.string.time_period_1
+        1 -> "08:20"
+        2 -> "09:20"
+        3 -> "10:20"
+        4 -> "11:20"
+        5 -> "13:10"
+        6 -> "14:10"
+        7 -> "15:10"
+        else -> ""
     }
 }
