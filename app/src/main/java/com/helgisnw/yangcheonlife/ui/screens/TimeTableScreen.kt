@@ -16,9 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.helgisnw.yangcheonlife.R
@@ -52,6 +54,23 @@ fun TimeTableScreen(
 
     val scheduleState by viewModel.scheduleState.collectAsState()
 
+    // Screen size calculation
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp - 32.dp // 좌우 패딩 16dp씩 제외
+    val screenHeight = configuration.screenHeightDp.dp
+
+    // Time table total height calculation (top bar height + grade/class selection area height + padding)
+    val topBarHeight = 56.dp
+    val selectionAreaHeight = 80.dp
+    val totalVerticalPadding = 48.dp // Total top and bottom padding
+    val availableHeight = screenHeight - topBarHeight - selectionAreaHeight - totalVerticalPadding
+
+    // Cell size calculation
+    val cellSize = minOf(
+        (screenWidth.value / 6).dp,
+        (availableHeight.value / 8).dp
+    )
+
     LaunchedEffect(selectedGrade, selectedClass) {
         viewModel.loadSchedule(selectedGrade, selectedClass)
     }
@@ -65,7 +84,8 @@ fun TimeTableScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally // 전체 열 가운데 정렬
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -149,31 +169,41 @@ fun TimeTableScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(6),
-                modifier = Modifier.fillMaxSize()
+            // 시간표 그리드를 가운데 정렬
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentSize(Alignment.Center)
             ) {
-                // Header row
-                items(6) { col ->
-                    HeaderCell(col)
-                }
-
-                // Time slots and schedule
-                repeat(7) { row ->
-                    item {
-                        TimeSlotCell(row + 1)
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(6),
+                    modifier = Modifier
+                        .width(cellSize * 6)
+                        .height(cellSize * 8)
+                ) {
+                    // Header row
+                    items(6) { col ->
+                        HeaderCell(col, cellSize)
                     }
 
-                    items(5) { col ->
-                        val scheduleItem = scheduleState.getOrNull(col)?.getOrNull(row)
-                        ScheduleCell(
-                            scheduleItem = scheduleItem,
-                            isCurrentPeriod = viewModel.isCurrentPeriod(row + 1, col + 1),
-                            backgroundColor = cellBackgroundColor,
-                            selectedSubjectB = selectedSubjectB,
-                            selectedSubjectC = selectedSubjectC,
-                            selectedSubjectD = selectedSubjectD
-                        )
+                    // Time slots and schedule
+                    repeat(7) { row ->
+                        item {
+                            TimeSlotCell(row + 1, cellSize)
+                        }
+
+                        items(5) { col ->
+                            val scheduleItem = scheduleState.getOrNull(col)?.getOrNull(row)
+                            ScheduleCell(
+                                scheduleItem = scheduleItem,
+                                isCurrentPeriod = viewModel.isCurrentPeriod(row + 1, col + 1),
+                                backgroundColor = cellBackgroundColor,
+                                selectedSubjectB = selectedSubjectB,
+                                selectedSubjectC = selectedSubjectC,
+                                selectedSubjectD = selectedSubjectD,
+                                cellSize = cellSize
+                            )
+                        }
                     }
                 }
             }
@@ -182,10 +212,10 @@ fun TimeTableScreen(
 }
 
 @Composable
-private fun HeaderCell(col: Int) {
+private fun HeaderCell(col: Int, cellSize: Dp) {
     Box(
         modifier = Modifier
-            .aspectRatio(1f)
+            .size(cellSize)
             .border(BorderStroke(1.dp, Color.Gray))
             .background(Color.Gray.copy(alpha = 0.3f))
     ) {
@@ -207,10 +237,10 @@ private fun HeaderCell(col: Int) {
 }
 
 @Composable
-private fun TimeSlotCell(period: Int) {
+private fun TimeSlotCell(period: Int, cellSize: Dp) {
     Box(
         modifier = Modifier
-            .aspectRatio(1f)
+            .size(cellSize)
             .border(BorderStroke(1.dp, Color.Gray))
             .background(Color.Gray.copy(alpha = 0.3f))
     ) {
@@ -242,11 +272,12 @@ private fun ScheduleCell(
     backgroundColor: Color,
     selectedSubjectB: String,
     selectedSubjectC: String,
-    selectedSubjectD: String
+    selectedSubjectD: String,
+    cellSize: Dp
 ) {
     Box(
         modifier = Modifier
-            .aspectRatio(1f)
+            .size(cellSize)
             .border(BorderStroke(1.dp, Color.Gray))
             .background(if (isCurrentPeriod) backgroundColor else Color.Transparent)
     ) {
