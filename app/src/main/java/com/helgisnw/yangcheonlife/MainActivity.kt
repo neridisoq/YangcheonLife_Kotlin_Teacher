@@ -32,11 +32,23 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainContent() {
     val context = LocalContext.current
-    val prefs = context.getSharedPreferences("app_settings", ComponentActivity.MODE_PRIVATE)
-    val showInitialSetup = prefs.getBoolean("initialSetupCompleted", false).not()
+    var showInitialSetup by remember {
+        mutableStateOf(
+            !context.getSharedPreferences("app_settings", ComponentActivity.MODE_PRIVATE)
+                .getBoolean("initialSetupCompleted", false)
+        )
+    }
 
     if (showInitialSetup) {
-        InitialSetupScreen()
+        InitialSetupScreen(
+            onSetupComplete = {
+                context.getSharedPreferences("app_settings", ComponentActivity.MODE_PRIVATE)
+                    .edit()
+                    .putBoolean("initialSetupCompleted", true)
+                    .apply()
+                showInitialSetup = false
+            }
+        )
     } else {
         MainScreen()
     }

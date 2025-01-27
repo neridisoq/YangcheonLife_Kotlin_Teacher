@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -39,11 +40,17 @@ fun TimeTableScreen(
     var selectedSubjectC by remember { mutableStateOf(prefs.getString("selectedSubjectC", "탐구C") ?: "탐구C") }
     var selectedSubjectD by remember { mutableStateOf(prefs.getString("selectedSubjectD", "탐구D") ?: "탐구D") }
 
+    val defaultColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f).toArgb()
+    var cellBackgroundColor by remember {
+        mutableStateOf(
+            Color(prefs.getInt("cellBackgroundColor", defaultColor))
+        )
+    }
+
     var expandedGrade by remember { mutableStateOf(false) }
     var expandedClass by remember { mutableStateOf(false) }
 
     val scheduleState by viewModel.scheduleState.collectAsState()
-    val cellBackgroundColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
 
     LaunchedEffect(selectedGrade, selectedClass) {
         viewModel.loadSchedule(selectedGrade, selectedClass)
@@ -91,7 +98,7 @@ fun TimeTableScreen(
                                 onClick = {
                                     selectedGrade = grade
                                     expandedGrade = false
-                                    prefs.edit().putInt("defaultGrade", grade).apply()
+                                    viewModel.loadSchedule(selectedGrade, selectedClass)
                                 }
                             )
                         }
@@ -126,7 +133,7 @@ fun TimeTableScreen(
                                 onClick = {
                                     selectedClass = classNum
                                     expandedClass = false
-                                    prefs.edit().putInt("defaultClass", classNum).apply()
+                                    viewModel.loadSchedule(selectedGrade, selectedClass)
                                 }
                             )
                         }

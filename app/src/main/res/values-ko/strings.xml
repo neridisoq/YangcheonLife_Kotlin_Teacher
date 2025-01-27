@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">양천생활</string>
+    <string name="color_picker_description">현재 시간에 해당하는 과목을 강조할 색상을 선택하세요</string>
 
     <!-- Initial Setup -->
     <string name="initial_setup">초기 설정</string>

@@ -3,13 +3,21 @@ package com.helgisnw.yangcheonlife.ui.screens
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -70,6 +78,26 @@ private fun SettingsMainContent(navController: NavController) {
 
     var notificationsEnabled by remember {
         mutableStateOf(prefs.getBoolean("notificationsEnabled", true))
+    }
+
+    var showColorPicker by remember { mutableStateOf(false) }
+    val defaultColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f).toArgb()
+    var selectedColor by remember {
+        mutableStateOf(
+            Color(prefs.getInt("cellBackgroundColor", defaultColor))
+        )
+    }
+
+    if (showColorPicker) {
+        ColorPickerDialog(
+            initialColor = selectedColor,
+            onColorSelected = { color ->
+                selectedColor = color
+                prefs.edit().putInt("cellBackgroundColor", color.toArgb()).apply()
+                showColorPicker = false
+            },
+            onDismiss = { showColorPicker = false }
+        )
     }
 
     Scaffold(
@@ -137,6 +165,26 @@ private fun SettingsMainContent(navController: NavController) {
                     .padding(vertical = 8.dp)
             ) {
                 ListItem(
+                    headlineContent = { Text(stringResource(R.string.color_picker)) },
+                    leadingContent = { Icon(Icons.Default.Palette, contentDescription = null) },
+                    trailingContent = {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(selectedColor)
+                                .clickable { showColorPicker = true }
+                        )
+                    }
+                )
+            }
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                ListItem(
                     headlineContent = { Text(stringResource(R.string.alert_settings)) },
                     leadingContent = { Icon(Icons.Default.Notifications, contentDescription = null) },
                     trailingContent = {
@@ -174,6 +222,81 @@ private fun SettingsMainContent(navController: NavController) {
             }
         }
     }
+}
+
+@Composable
+private fun ColorPickerDialog(
+    initialColor: Color,
+    onColorSelected: (Color) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val colors = listOf(
+        Color(0xFFBBDEFB), // Light Blue
+        Color(0xFFB3E5FC), // Lighter Blue
+        Color(0xFFC8E6C9), // Light Green
+        Color(0xFFFFF9C4), // Light Yellow
+        Color(0xFFFFCCBC), // Light Red
+        Color(0xFFE1BEE7), // Light Purple
+        Color(0xFFF8BBD0), // Light Pink
+        Color(0xFFFFE0B2), // Light Orange
+        Color(0xFFD7CCC8), // Light Brown
+        Color(0xFFF5F5F5)  // Light Gray
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.color_picker)) },
+        text = {
+            Column {
+                Text(
+                    text = stringResource(R.string.color_picker_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(5),
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    items(colors.size) { index ->
+                        ColorItem(
+                            color = colors[index],
+                            isSelected = colors[index] == initialColor,
+                            onClick = { onColorSelected(colors[index]) }
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.dialog_cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun ColorItem(
+    color: Color,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .padding(4.dp)
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(color)
+            .clickable(onClick = onClick)
+            .then(
+                if (isSelected) {
+                    Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                } else {
+                    Modifier
+                }
+            )
+    )
 }
 
 private fun openWebPage(context: android.content.Context, url: String) {

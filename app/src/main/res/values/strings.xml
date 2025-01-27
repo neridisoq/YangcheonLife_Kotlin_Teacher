@@ -49,6 +49,7 @@
     <string name="error_loading_schedule">시간표를 불러오는 중 오류가 발생했습니다</string>
     <string name="error_loading_lunch">급식 정보를 불러오는 중 오류가 발생했습니다</string>
     <string name="error_network">네트워크 연결을 확인해주세요</string>
+    <string name="color_picker_description">현재 시간에 해당하는 과목을 강조할 색상을 선택하세요</string>
 
     <!-- Dialog Messages -->
     <string name="dialog_save_changes">변경사항을 저장하시겠습니까?</string>
