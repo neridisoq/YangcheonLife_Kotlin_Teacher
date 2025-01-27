@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">양천생활</string>
+
+    <!-- Initial Setup -->
+    <string name="initial_setup">초기 설정</string>
+    <string name="done">완료</string>
+
+    <!-- Class Settings -->
+    <string name="class_settings">학년/반 설정</string>
+    <string name="grade">학년</string>
+    <string name="classroom">반</string>
+    <string name="grade_format">%d학년</string>
+    <string name="classroom_format">%d반</string>
+
+    <!-- Subject Selection -->
+    <string name="subject_selection">탐구 과목 선택</string>
+    <string name="subject_b">탐구B 과목</string>
+    <string name="subject_c">탐구C 과목</string>
+    <string name="subject_d">탐구D 과목</string>
+
+    <!-- Timetable -->
+    <string name="timetable">시간표</string>
+    <string name="refresh">새로고침</string>
+    <string name="period_format">%d교시</string>
+    <string name="mon">월</string>
+    <string name="tue">화</string>
+    <string name="wed">수</string>
+    <string name="thu">목</string>
+    <string name="fri">금</string>
+
+    <!-- Lunch -->
+    <string name="lunch">급식</string>
+    <string name="loading">로딩 중…</string>
+
+    <!-- Settings -->
+    <string name="settings">설정</string>
+    <string name="alert_settings">알림 설정</string>
+    <string name="privacy_policy">개인정보 처리방침</string>
+    <string name="goto_school_web">학교 홈페이지</string>
+    <string name="support">문의하기</string>
+    <string name="color_picker">배경색 설정</string>
+
+    <!-- Notifications -->
+    <string name="channel_name">양천생활 알림</string>
+    <string name="channel_description">학교 공지사항 및 시간표 변경 알림</string>
+
+    <!-- Error Messages -->
+    <string name="error_loading_schedule">시간표를 불러오는 중 오류가 발생했습니다</string>
+    <string name="error_loading_lunch">급식 정보를 불러오는 중 오류가 발생했습니다</string>
+    <string name="error_network">네트워크 연결을 확인해주세요</string>
+
+    <!-- Dialog Messages -->
+    <string name="dialog_save_changes">변경사항을 저장하시겠습니까?</string>
+    <string name="dialog_yes">예</string>
+    <string name="dialog_no">아니오</string>
+    <string name="dialog_cancel">취소</string>
+
+    <!-- Time Periods -->
+    <string name="time_period_1">08:20 ~ 09:10</string>
+    <string name="time_period_2">09:20 ~ 10:10</string>
+    <string name="time_period_3">10:20 ~ 11:10</string>
+    <string name="time_period_4">11:20 ~ 12:10</string>
+    <string name="time_period_5">13:10 ~ 14:00</string>
+    <string name="time_period_6">14:10 ~ 15:00</string>
+    <string name="time_period_7">15:10 ~ 16:00</string>
+</resources>
