@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">양천생활</string>
+    <string name="app_name">양천고 라이프</string>
 
     <!-- Initial Setup -->
     <string name="initial_setup">초기 설정</string>
@@ -42,8 +42,8 @@
     <string name="color_picker">배경색 설정</string>
 
     <!-- Notifications -->
-    <string name="channel_name">양천생활 알림</string>
-    <string name="channel_description">학교 공지사항 및 시간표 변경 알림</string>
+    <string name="channel_name">양천고라이프 알림</string>
+    <string name="channel_description">시간표 알림</string>
 
     <!-- Error Messages -->
     <string name="error_loading_schedule">시간표를 불러오는 중 오류가 발생했습니다</string>
