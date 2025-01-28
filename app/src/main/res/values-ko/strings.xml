@@ -5,7 +5,6 @@
     <!-- Initial Setup -->
     <string name="initial_setup">초기 설정</string>
     <string name="done">완료</string>
-
     <!-- Class Settings -->
     <string name="class_settings">학년/반 설정</string>
     <string name="grade">학년</string>

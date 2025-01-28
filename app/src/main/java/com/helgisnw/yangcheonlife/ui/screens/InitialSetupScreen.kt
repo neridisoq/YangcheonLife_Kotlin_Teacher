@@ -2,6 +2,8 @@ package com.helgisnw.yangcheonlife.ui.screens
 
 import android.content.SharedPreferences
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,165 +51,172 @@ fun InitialSetupScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(
-                        text = stringResource(R.string.class_settings),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-
-                    // Grade Selection
-                    ExposedDropdownMenuBox(
-                        expanded = expandedGrade,
-                        onExpandedChange = { expandedGrade = !expandedGrade },
-                        modifier = Modifier.fillMaxWidth()
+                    Column(
+                        modifier = Modifier.padding(16.dp)
                     ) {
-                        OutlinedTextField(
-                            value = String.format(stringResource(R.string.grade_format), selectedGrade),
-                            onValueChange = { },
-                            readOnly = true,
-                            label = { Text(stringResource(R.string.grade)) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedGrade) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor()
+                        Text(
+                            text = stringResource(R.string.class_settings),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 16.dp)
                         )
 
-                        ExposedDropdownMenu(
+                        // Grade Selection
+                        ExposedDropdownMenuBox(
                             expanded = expandedGrade,
-                            onDismissRequest = { expandedGrade = false }
+                            onExpandedChange = { expandedGrade = !expandedGrade },
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            (1..3).forEach { grade ->
-                                DropdownMenuItem(
-                                    text = { Text(String.format(stringResource(R.string.grade_format), grade)) },
-                                    onClick = {
-                                        selectedGrade = grade
-                                        expandedGrade = false
-                                    }
-                                )
+                            OutlinedTextField(
+                                value = String.format(stringResource(R.string.grade_format), selectedGrade),
+                                onValueChange = { },
+                                readOnly = true,
+                                label = { Text(stringResource(R.string.grade)) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedGrade) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor()
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = expandedGrade,
+                                onDismissRequest = { expandedGrade = false }
+                            ) {
+                                (1..3).forEach { grade ->
+                                    DropdownMenuItem(
+                                        text = { Text(String.format(stringResource(R.string.grade_format), grade)) },
+                                        onClick = {
+                                            selectedGrade = grade
+                                            expandedGrade = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Class Selection
+                        ExposedDropdownMenuBox(
+                            expanded = expandedClass,
+                            onExpandedChange = { expandedClass = !expandedClass },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            OutlinedTextField(
+                                value = String.format(stringResource(R.string.classroom_format), selectedClass),
+                                onValueChange = { },
+                                readOnly = true,
+                                label = { Text(stringResource(R.string.classroom)) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedClass) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor()
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = expandedClass,
+                                onDismissRequest = { expandedClass = false }
+                            ) {
+                                (1..11).forEach { classNum ->
+                                    DropdownMenuItem(
+                                        text = { Text(String.format(stringResource(R.string.classroom_format), classNum)) },
+                                        onClick = {
+                                            selectedClass = classNum
+                                            expandedClass = false
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                    // Class Selection
-                    ExposedDropdownMenuBox(
-                        expanded = expandedClass,
-                        onExpandedChange = { expandedClass = !expandedClass },
-                        modifier = Modifier.fillMaxWidth()
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
                     ) {
-                        OutlinedTextField(
-                            value = String.format(stringResource(R.string.classroom_format), selectedClass),
-                            onValueChange = { },
-                            readOnly = true,
-                            label = { Text(stringResource(R.string.classroom)) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedClass) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor()
+                        Text(
+                            text = stringResource(R.string.subject_selection),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 16.dp)
                         )
 
-                        ExposedDropdownMenu(
-                            expanded = expandedClass,
-                            onDismissRequest = { expandedClass = false }
-                        ) {
-                            (1..11).forEach { classNum ->
-                                DropdownMenuItem(
-                                    text = { Text(String.format(stringResource(R.string.classroom_format), classNum)) },
-                                    onClick = {
-                                        selectedClass = classNum
-                                        expandedClass = false
-                                    }
-                                )
-                            }
-                        }
+                        // Subject Selections
+                        SubjectDropdown(
+                            selectedSubject = selectedSubjectB,
+                            onSubjectSelected = { selectedSubjectB = it },
+                            expanded = expandedSubjectB,
+                            onExpandedChange = { expandedSubjectB = it },
+                            subjects = subjects,
+                            label = stringResource(R.string.subject_b)
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        SubjectDropdown(
+                            selectedSubject = selectedSubjectC,
+                            onSubjectSelected = { selectedSubjectC = it },
+                            expanded = expandedSubjectC,
+                            onExpandedChange = { expandedSubjectC = it },
+                            subjects = subjects,
+                            label = stringResource(R.string.subject_c)
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        SubjectDropdown(
+                            selectedSubject = selectedSubjectD,
+                            onSubjectSelected = { selectedSubjectD = it },
+                            expanded = expandedSubjectD,
+                            onExpandedChange = { expandedSubjectD = it },
+                            subjects = subjects,
+                            label = stringResource(R.string.subject_d)
+                        )
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
+                // Notifications Section
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(
-                        text = stringResource(R.string.subject_selection),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-
-                    // Subject Selections
-                    SubjectDropdown(
-                        selectedSubject = selectedSubjectB,
-                        onSubjectSelected = { selectedSubjectB = it },
-                        expanded = expandedSubjectB,
-                        onExpandedChange = { expandedSubjectB = it },
-                        subjects = subjects,
-                        label = stringResource(R.string.subject_b)
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    SubjectDropdown(
-                        selectedSubject = selectedSubjectC,
-                        onSubjectSelected = { selectedSubjectC = it },
-                        expanded = expandedSubjectC,
-                        onExpandedChange = { expandedSubjectC = it },
-                        subjects = subjects,
-                        label = stringResource(R.string.subject_c)
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    SubjectDropdown(
-                        selectedSubject = selectedSubjectD,
-                        onSubjectSelected = { selectedSubjectD = it },
-                        expanded = expandedSubjectD,
-                        onExpandedChange = { expandedSubjectD = it },
-                        subjects = subjects,
-                        label = stringResource(R.string.subject_d)
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.alert_settings),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Switch(
+                            checked = notificationsEnabled,
+                            onCheckedChange = { notificationsEnabled = it }
+                        )
+                    }
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Notifications Section
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.alert_settings),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Switch(
-                        checked = notificationsEnabled,
-                        onCheckedChange = { notificationsEnabled = it }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
+            // Button at the bottom
             Button(
                 onClick = {
                     saveSettings(
@@ -223,7 +232,7 @@ fun InitialSetupScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp)
+                    .padding(16.dp)
             ) {
                 Text(stringResource(R.string.done))
             }
