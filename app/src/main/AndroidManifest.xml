@@ -72,6 +72,12 @@
                     android:value="androidx.startup"
                     tools:node="remove" />
         </provider>
-
+        <receiver
+                android:name=".util.LocalNotificationManager$NotificationReceiver"
+                android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

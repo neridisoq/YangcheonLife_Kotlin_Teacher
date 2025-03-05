@@ -27,20 +27,9 @@ fun InitialSetupScreen(
     var selectedGrade by remember { mutableStateOf(1) }
     var selectedClass by remember { mutableStateOf(1) }
     var notificationsEnabled by remember { mutableStateOf(true) }
-    var selectedSubjectB by remember { mutableStateOf("없음") }
-    var selectedSubjectC by remember { mutableStateOf("없음") }
-    var selectedSubjectD by remember { mutableStateOf("없음") }
 
     var expandedGrade by remember { mutableStateOf(false) }
     var expandedClass by remember { mutableStateOf(false) }
-    var expandedSubjectB by remember { mutableStateOf(false) }
-    var expandedSubjectC by remember { mutableStateOf(false) }
-    var expandedSubjectD by remember { mutableStateOf(false) }
-
-    val subjects = listOf(
-        "없음", "물리", "화학", "생명과학", "지구과학", "윤사", "정치와 법",
-        "경제", "세계사", "한국지리", "탐구B", "탐구C", "탐구D"
-    )
 
     Scaffold(
         topBar = {
@@ -143,54 +132,6 @@ fun InitialSetupScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.subject_selection),
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-
-                        // Subject Selections
-                        SubjectDropdown(
-                            selectedSubject = selectedSubjectB,
-                            onSubjectSelected = { selectedSubjectB = it },
-                            expanded = expandedSubjectB,
-                            onExpandedChange = { expandedSubjectB = it },
-                            subjects = subjects,
-                            label = stringResource(R.string.subject_b)
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        SubjectDropdown(
-                            selectedSubject = selectedSubjectC,
-                            onSubjectSelected = { selectedSubjectC = it },
-                            expanded = expandedSubjectC,
-                            onExpandedChange = { expandedSubjectC = it },
-                            subjects = subjects,
-                            label = stringResource(R.string.subject_c)
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        SubjectDropdown(
-                            selectedSubject = selectedSubjectD,
-                            onSubjectSelected = { selectedSubjectD = it },
-                            expanded = expandedSubjectD,
-                            onExpandedChange = { expandedSubjectD = it },
-                            subjects = subjects,
-                            label = stringResource(R.string.subject_d)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
                 // Notifications Section
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -214,6 +155,26 @@ fun InitialSetupScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
+
+                // 안내 메시지 추가
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "안내",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Text(
+                            text = "탐구/기초 과목 선택은 설정 메뉴에서 할 수 있습니다.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
 
             // Button at the bottom
@@ -223,10 +184,7 @@ fun InitialSetupScreen(
                         prefs,
                         selectedGrade,
                         selectedClass,
-                        notificationsEnabled,
-                        selectedSubjectB,
-                        selectedSubjectC,
-                        selectedSubjectD
+                        notificationsEnabled
                     )
                     onSetupComplete()
                 },
@@ -240,70 +198,31 @@ fun InitialSetupScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SubjectDropdown(
-    selectedSubject: String,
-    onSubjectSelected: (String) -> Unit,
-    expanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit,
-    subjects: List<String>,
-    label: String
-) {
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { onExpandedChange(it) },
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        OutlinedTextField(
-            value = selectedSubject,
-            onValueChange = { },
-            readOnly = true,
-            label = { Text(label) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor()
-        )
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { onExpandedChange(false) }
-        ) {
-            subjects.forEach { subject ->
-                DropdownMenuItem(
-                    text = { Text(subject) },
-                    onClick = {
-                        onSubjectSelected(subject)
-                        onExpandedChange(false)
-                    }
-                )
-            }
-        }
-    }
-}
-
 private fun saveSettings(
     prefs: SharedPreferences,
     grade: Int,
     classNum: Int,
-    notificationsEnabled: Boolean,
-    subjectB: String,
-    subjectC: String,
-    subjectD: String
+    notificationsEnabled: Boolean
 ) {
     prefs.edit().apply {
         putInt("defaultGrade", grade)
         putInt("defaultClass", classNum)
         putBoolean("notificationsEnabled", notificationsEnabled)
-        putString("selectedSubjectB", subjectB)
-        putString("selectedSubjectC", subjectC)
-        putString("selectedSubjectD", subjectD)
         putBoolean("initialSetupCompleted", true)
         apply()
     }
 
+    // FCM 토픽 구독
     if (notificationsEnabled) {
-        FirebaseMessaging.getInstance().subscribeToTopic("$grade-$classNum")
+        val topic = "$grade-$classNum"
+        android.util.Log.d("FCM_DEBUG", "초기 설정 - FCM 토픽 구독: $topic")
+        FirebaseMessaging.getInstance().subscribeToTopic(topic)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    android.util.Log.d("FCM_DEBUG", "초기 설정 - FCM 토픽 구독 성공: $topic")
+                } else {
+                    android.util.Log.e("FCM_DEBUG", "초기 설정 - FCM 토픽 구독 실패: $topic", task.exception)
+                }
+            }
     }
 }

@@ -16,13 +16,17 @@ class YangcheonMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
+        android.util.Log.d("FCM_DEBUG", "FCM 메시지 수신: ${remoteMessage.data}")
+
         remoteMessage.notification?.let { notification ->
+            android.util.Log.d("FCM_DEBUG", "알림 제목: ${notification.title}, 내용: ${notification.body}")
             showNotification(notification.title, notification.body)
         }
     }
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
+        android.util.Log.d("FCM_DEBUG", "새 FCM 토큰: $token")
         // TODO: 필요한 경우 토큰을 서버에 전송
     }
 

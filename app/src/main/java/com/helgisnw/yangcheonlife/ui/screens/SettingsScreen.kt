@@ -53,19 +53,7 @@ fun SettingsScreen() {
             }
         }
         composable("subject_settings") {
-            Scaffold(
-                topBar = {
-                    TopBar(
-                        title = stringResource(R.string.subject_selection),
-                        showBackButton = true,
-                        onBackClick = { navController.navigateUp() }
-                    )
-                }
-            ) { paddingValues ->
-                Box(modifier = Modifier.padding(paddingValues)) {
-                    SubjectSelectionSettings()
-                }
-            }
+            SubjectSelectionScreen(mainNavController = navController)
         }
     }
 }
@@ -130,7 +118,7 @@ private fun SettingsMainContent(navController: NavController) {
                     .clickable { navController.navigate("subject_settings") }
             ) {
                 ListItem(
-                    headlineContent = { Text(stringResource(R.string.subject_selection)) },
+                    headlineContent = { Text("탐구/기초 과목 선택") },
                     leadingContent = { Icon(Icons.Default.Book, contentDescription = null) }
                 )
             }
@@ -193,6 +181,7 @@ private fun SettingsMainContent(navController: NavController) {
                             onCheckedChange = { enabled ->
                                 notificationsEnabled = enabled
                                 prefs.edit().putBoolean("notificationsEnabled", enabled).apply()
+
                                 if (enabled) {
                                     subscribeToCurrentTopic(prefs)
                                 } else {

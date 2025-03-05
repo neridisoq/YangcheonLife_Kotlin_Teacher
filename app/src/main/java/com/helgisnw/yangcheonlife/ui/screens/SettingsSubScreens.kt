@@ -268,6 +268,8 @@ private fun updateClassSettings(
 ) {
     val oldGrade = prefs.getInt("defaultGrade", 1)
     val oldClass = prefs.getInt("defaultClass", 1)
+    val oldTopic = "$oldGrade-$oldClass"
+    val newTopic = "$grade-$classNum"
 
     prefs.edit().apply {
         putInt("defaultGrade", grade)
@@ -276,7 +278,35 @@ private fun updateClassSettings(
     }
 
     if (notificationsEnabled) {
-        FirebaseMessaging.getInstance().unsubscribeFromTopic("$oldGrade-$oldClass")
-        FirebaseMessaging.getInstance().subscribeToTopic("$grade-$classNum")
+        android.util.Log.d("FCM_DEBUG", "FCM 토픽 변경: $oldTopic → $newTopic")
+
+        FirebaseMessaging.getInstance().unsubscribeFromTopic(oldTopic)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    android.util.Log.d("FCM_DEBUG", "FCM 토픽 구독 해제 성공: $oldTopic")
+
+                    // 해제 성공 후 새 토픽 구독
+                    FirebaseMessaging.getInstance().subscribeToTopic(newTopic)
+                        .addOnCompleteListener { subTask ->
+                            if (subTask.isSuccessful) {
+                                android.util.Log.d("FCM_DEBUG", "FCM 토픽 구독 성공: $newTopic")
+                            } else {
+                                android.util.Log.e("FCM_DEBUG", "FCM 토픽 구독 실패: $newTopic", subTask.exception)
+                            }
+                        }
+                } else {
+                    android.util.Log.e("FCM_DEBUG", "FCM 토픽 구독 해제 실패: $oldTopic", task.exception)
+
+                    // 해제 실패해도 새 토픽은 구독 시도
+                    FirebaseMessaging.getInstance().subscribeToTopic(newTopic)
+                        .addOnCompleteListener { subTask ->
+                            if (subTask.isSuccessful) {
+                                android.util.Log.d("FCM_DEBUG", "FCM 토픽 구독 성공: $newTopic")
+                            } else {
+                                android.util.Log.e("FCM_DEBUG", "FCM 토픽 구독 실패: $newTopic", subTask.exception)
+                            }
+                        }
+                }
+            }
     }
 }

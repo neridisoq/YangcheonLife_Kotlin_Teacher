@@ -1,6 +1,7 @@
 package com.helgisnw.yangcheonlife.ui.screens
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.helgisnw.yangcheonlife.R
 import com.helgisnw.yangcheonlife.data.model.ScheduleItem
@@ -38,9 +40,6 @@ fun TimeTableScreen(
 
     var selectedGrade by remember { mutableStateOf(prefs.getInt("defaultGrade", 1)) }
     var selectedClass by remember { mutableStateOf(prefs.getInt("defaultClass", 1)) }
-    var selectedSubjectB by remember { mutableStateOf(prefs.getString("selectedSubjectB", "탐구B") ?: "탐구B") }
-    var selectedSubjectC by remember { mutableStateOf(prefs.getString("selectedSubjectC", "탐구C") ?: "탐구C") }
-    var selectedSubjectD by remember { mutableStateOf(prefs.getString("selectedSubjectD", "탐구D") ?: "탐구D") }
 
     val defaultColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f).toArgb()
     var cellBackgroundColor by remember {
@@ -86,7 +85,7 @@ fun TimeTableScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally // 전체 열 가운데 정렬
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -120,6 +119,9 @@ fun TimeTableScreen(
                                     selectedGrade = grade
                                     expandedGrade = false
                                     viewModel.loadSchedule(selectedGrade, selectedClass)
+
+                                    // 학년 변경 시 SharedPreferences 업데이트
+                                    prefs.edit().putInt("defaultGrade", grade).apply()
                                 }
                             )
                         }
@@ -155,6 +157,9 @@ fun TimeTableScreen(
                                     selectedClass = classNum
                                     expandedClass = false
                                     viewModel.loadSchedule(selectedGrade, selectedClass)
+
+                                    // 반 변경 시 SharedPreferences 업데이트
+                                    prefs.edit().putInt("defaultClass", classNum).apply()
                                 }
                             )
                         }
@@ -163,7 +168,9 @@ fun TimeTableScreen(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                IconButton(onClick = { viewModel.loadSchedule(selectedGrade, selectedClass) }) {
+                IconButton(onClick = {
+                    viewModel.loadSchedule(selectedGrade, selectedClass)
+                }) {
                     Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.refresh))
                 }
             }
@@ -199,9 +206,7 @@ fun TimeTableScreen(
                                 scheduleItem = scheduleItem,
                                 isCurrentPeriod = viewModel.isCurrentPeriod(row + 1, col + 1),
                                 backgroundColor = cellBackgroundColor,
-                                selectedSubjectB = selectedSubjectB,
-                                selectedSubjectC = selectedSubjectC,
-                                selectedSubjectD = selectedSubjectD,
+                                prefs = prefs,
                                 cellSize = cellSize
                             )
                         }
@@ -271,9 +276,7 @@ private fun ScheduleCell(
     scheduleItem: ScheduleItem?,
     isCurrentPeriod: Boolean,
     backgroundColor: Color,
-    selectedSubjectB: String,
-    selectedSubjectC: String,
-    selectedSubjectD: String,
+    prefs: SharedPreferences,
     cellSize: Dp
 ) {
     Box(
@@ -285,27 +288,40 @@ private fun ScheduleCell(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(4.dp),
+                .padding(2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            val displaySubject = when (scheduleItem?.subject) {
-                "탐구B" -> selectedSubjectB
-                "탐구C" -> selectedSubjectC
-                "탐구D" -> selectedSubjectD
-                else -> scheduleItem?.subject
-            }
+            if (scheduleItem?.subject != null) {
+                var displaySubject = scheduleItem.subject
+                var displayLocation = scheduleItem.teacher
 
-            Text(
-                text = displaySubject ?: "",
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center
-            )
-            if (scheduleItem?.teacher?.isNotBlank() == true) {
+                // A반과 같은 형식인 경우 사용자 설정 확인
+                if (scheduleItem.subject.contains("반")) {
+                    val selectedSubject = prefs.getString("selected${scheduleItem.subject}Subject", null)
+                    if (!selectedSubject.isNullOrEmpty() && selectedSubject != "선택 없음" && selectedSubject != scheduleItem.subject) {
+                        val components = selectedSubject.split("/")
+                        if (components.size == 2) {
+                            displaySubject = components[0]
+                            displayLocation = components[1]
+                        }
+                    }
+                }
+
+                // 과목명 (더 큰 글씨)
                 Text(
-                    text = scheduleItem.teacher,
-                    style = MaterialTheme.typography.bodySmall,
-                    textAlign = TextAlign.Center
+                    text = displaySubject,
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
+                )
+
+                // 교실/선생님 정보 (작은 글씨)
+                Text(
+                    text = displayLocation,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
                 )
             }
         }
