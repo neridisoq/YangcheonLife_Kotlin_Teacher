@@ -1,6 +1,6 @@
-package com.helgisnw.yangcheonlife.data.api
+package com.helgisnw.yangcheonlifeteacher.data.api
 
-import com.helgisnw.yangcheonlife.data.model.ScheduleItem
+import com.helgisnw.yangcheonlifeteacher.data.model.ScheduleItem
 import retrofit2.http.GET
 import retrofit2.http.Path
 

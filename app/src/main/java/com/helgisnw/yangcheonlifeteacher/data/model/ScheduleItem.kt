@@ -1,4 +1,4 @@
-package com.helgisnw.yangcheonlife.data.model
+package com.helgisnw.yangcheonlifeteacher.data.model
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize

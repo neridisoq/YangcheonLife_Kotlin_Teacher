@@ -1,4 +1,4 @@
-package com.helgisnw.yangcheonlife.ui.screens
+package com.helgisnw.yangcheonlifeteacher.ui.screens
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.helgisnw.yangcheonlifeteacher.R
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -15,7 +16,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.helgisnw.yangcheonlife.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

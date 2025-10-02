@@ -1,4 +1,4 @@
-package com.helgisnw.yangcheonlife.ui.theme
+package com.helgisnw.yangcheonlifeteacher.ui.theme
 
 import android.app.Activity
 import android.os.Build

@@ -1,4 +1,4 @@
-package com.helgisnw.yangcheonlife
+package com.helgisnw.yangcheonlifeteacher
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -15,9 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.helgisnw.yangcheonlife.ui.screens.InitialSetupScreen
-import com.helgisnw.yangcheonlife.ui.screens.MainScreen
-import com.helgisnw.yangcheonlife.ui.theme.YangcheonLifeTheme
+import com.helgisnw.yangcheonlifeteacher.ui.screens.InitialSetupScreen
+import com.helgisnw.yangcheonlifeteacher.ui.screens.MainScreen
+import com.helgisnw.yangcheonlifeteacher.ui.theme.YangcheonLifeTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class MainActivity : ComponentActivity() {

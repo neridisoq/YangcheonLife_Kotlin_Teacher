@@ -1,9 +1,9 @@
-package com.helgisnw.yangcheonlife.ui.viewmodel
+package com.helgisnw.yangcheonlifeteacher.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.helgisnw.yangcheonlife.data.model.ScheduleItem
-import com.helgisnw.yangcheonlife.data.repository.ScheduleRepository
+import com.helgisnw.yangcheonlifeteacher.data.model.ScheduleItem
+import com.helgisnw.yangcheonlifeteacher.data.repository.ScheduleRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

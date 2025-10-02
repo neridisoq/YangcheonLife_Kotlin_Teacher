@@ -1,14 +1,14 @@
-package com.helgisnw.yangcheonlife.ui.screens
+package com.helgisnw.yangcheonlifeteacher.ui.screens
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.helgisnw.yangcheonlifeteacher.R
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -25,10 +25,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.helgisnw.yangcheonlife.R
-import com.helgisnw.yangcheonlife.data.model.ScheduleItem
-import com.helgisnw.yangcheonlife.ui.components.TopBar
-import com.helgisnw.yangcheonlife.ui.viewmodel.TimeTableViewModel
+import com.helgisnw.yangcheonlifeteacher.data.model.ScheduleItem
+import com.helgisnw.yangcheonlifeteacher.ui.components.TopBar
+import com.helgisnw.yangcheonlifeteacher.ui.viewmodel.TimeTableViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

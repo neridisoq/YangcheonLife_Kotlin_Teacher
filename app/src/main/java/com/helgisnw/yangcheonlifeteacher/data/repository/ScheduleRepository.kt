@@ -1,7 +1,7 @@
-package com.helgisnw.yangcheonlife.data.repository
+package com.helgisnw.yangcheonlifeteacher.data.repository
 
-import com.helgisnw.yangcheonlife.data.api.RetrofitClient
-import com.helgisnw.yangcheonlife.data.model.ScheduleItem
+import com.helgisnw.yangcheonlifeteacher.data.api.RetrofitClient
+import com.helgisnw.yangcheonlifeteacher.data.model.ScheduleItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

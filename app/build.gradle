@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace 'com.helgisnw.yangcheonlife'
+    namespace 'com.helgisnw.yangcheonlifeteacher'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.helgisnw.yangcheonlife"
+        applicationId "com.helgisnw.yangcheonlifeteacher"
         minSdk 26
         targetSdk 34
         versionCode 13

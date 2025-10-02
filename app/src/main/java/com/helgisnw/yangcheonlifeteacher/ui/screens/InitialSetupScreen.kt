@@ -1,4 +1,4 @@
-package com.helgisnw.yangcheonlife.ui.screens
+package com.helgisnw.yangcheonlifeteacher.ui.screens
 
 import android.content.SharedPreferences
 import androidx.compose.foundation.layout.*
@@ -10,11 +10,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.google.firebase.messaging.FirebaseMessaging
-import com.helgisnw.yangcheonlife.R
-import com.helgisnw.yangcheonlife.ui.components.TopBar
+import com.helgisnw.yangcheonlifeteacher.R
+import com.helgisnw.yangcheonlifeteacher.ui.components.TopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

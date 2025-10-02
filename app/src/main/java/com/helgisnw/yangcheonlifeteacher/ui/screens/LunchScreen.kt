@@ -1,4 +1,4 @@
-package com.helgisnw.yangcheonlife.ui.screens
+package com.helgisnw.yangcheonlifeteacher.ui.screens
 
 import android.webkit.WebView
 import android.webkit.WebViewClient

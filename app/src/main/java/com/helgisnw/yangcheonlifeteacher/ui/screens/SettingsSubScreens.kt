@@ -1,6 +1,7 @@
-package com.helgisnw.yangcheonlife.ui.screens
+package com.helgisnw.yangcheonlifeteacher.ui.screens
 
 import android.content.SharedPreferences
+import com.helgisnw.yangcheonlifeteacher.R
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -11,7 +12,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.google.firebase.messaging.FirebaseMessaging
-import com.helgisnw.yangcheonlife.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -1,8 +1,9 @@
-package com.helgisnw.yangcheonlife.ui.screens
+package com.helgisnw.yangcheonlifeteacher.ui.screens
 
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
+import com.helgisnw.yangcheonlifeteacher.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,8 +27,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.messaging.FirebaseMessaging
-import com.helgisnw.yangcheonlife.R
-import com.helgisnw.yangcheonlife.ui.components.TopBar
+import com.helgisnw.yangcheonlifeteacher.ui.components.TopBar
 
 @Composable
 fun SettingsScreen() {

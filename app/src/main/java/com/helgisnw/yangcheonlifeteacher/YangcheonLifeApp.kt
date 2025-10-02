@@ -1,4 +1,4 @@
-package com.helgisnw.yangcheonlife
+package com.helgisnw.yangcheonlifeteacher
 
 import android.app.Application
 import android.app.NotificationChannel

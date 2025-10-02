@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "YangcheonLife"
+rootProject.name = "YangcheonLife_Teacher"
 include ':app'

@@ -1,4 +1,4 @@
-package com.helgisnw.yangcheonlife.service
+package com.helgisnw.yangcheonlifeteacher.service
 
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -7,9 +7,9 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.helgisnw.yangcheonlife.MainActivity
-import com.helgisnw.yangcheonlife.R
-import com.helgisnw.yangcheonlife.YangcheonLifeApp.Companion.CHANNEL_ID
+import com.helgisnw.yangcheonlifeteacher.MainActivity
+import com.helgisnw.yangcheonlifeteacher.R
+import com.helgisnw.yangcheonlifeteacher.YangcheonLifeApp.Companion.CHANNEL_ID
 
 class YangcheonMessagingService : FirebaseMessagingService() {
 

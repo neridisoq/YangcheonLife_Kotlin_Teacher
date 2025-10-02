@@ -1,4 +1,4 @@
-package com.helgisnw.yangcheonlife.data.api
+package com.helgisnw.yangcheonlifeteacher.data.api
 
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor

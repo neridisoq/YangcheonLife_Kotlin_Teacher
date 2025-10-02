@@ -1,4 +1,4 @@
-package com.helgisnw.yangcheonlife
+package com.helgisnw.yangcheonlifeteacher
 
 import org.junit.Test
 
