@@ -11,9 +11,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.google.firebase.messaging.FirebaseMessaging
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.helgisnw.yangcheonlifeteacher.R
 import com.helgisnw.yangcheonlifeteacher.ui.components.TopBar
+import com.helgisnw.yangcheonlifeteacher.ui.viewmodel.TeacherViewModel
+import com.helgisnw.yangcheonlifeteacher.data.model.Teacher
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,13 +24,23 @@ fun InitialSetupScreen(
 ) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("app_settings", android.content.Context.MODE_PRIVATE) }
+    val teacherViewModel: TeacherViewModel = viewModel()
 
-    var selectedGrade by remember { mutableStateOf(1) }
-    var selectedClass by remember { mutableStateOf(1) }
+    var selectedTeacher by remember { mutableStateOf<Teacher?>(null) }
     var notificationsEnabled by remember { mutableStateOf(true) }
+    var expandedTeacher by remember { mutableStateOf(false) }
 
-    var expandedGrade by remember { mutableStateOf(false) }
-    var expandedClass by remember { mutableStateOf(false) }
+    val teachers by teacherViewModel.teachers.collectAsState()
+    val isLoading by teacherViewModel.isLoading.collectAsState()
+    val error by teacherViewModel.error.collectAsState()
+
+    // 에러 처리
+    error?.let { errorMessage ->
+        LaunchedEffect(errorMessage) {
+            // 에러가 발생하면 스낵바 등으로 표시할 수 있습니다
+            teacherViewModel.clearError()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -54,76 +66,72 @@ fun InitialSetupScreen(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = stringResource(R.string.class_settings),
+                            text = "교사 선택",
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
 
-                        // Grade Selection
-                        ExposedDropdownMenuBox(
-                            expanded = expandedGrade,
-                            onExpandedChange = { expandedGrade = !expandedGrade },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            OutlinedTextField(
-                                value = String.format(stringResource(R.string.grade_format), selectedGrade),
-                                onValueChange = { },
-                                readOnly = true,
-                                label = { Text(stringResource(R.string.grade)) },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedGrade) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .menuAnchor()
-                            )
-
-                            ExposedDropdownMenu(
-                                expanded = expandedGrade,
-                                onDismissRequest = { expandedGrade = false }
+                        if (isLoading) {
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
                             ) {
-                                (1..3).forEach { grade ->
-                                    DropdownMenuItem(
-                                        text = { Text(String.format(stringResource(R.string.grade_format), grade)) },
-                                        onClick = {
-                                            selectedGrade = grade
-                                            expandedGrade = false
-                                        }
-                                    )
+                                CircularProgressIndicator()
+                            }
+                        } else {
+                            // Teacher Selection
+                            ExposedDropdownMenuBox(
+                                expanded = expandedTeacher,
+                                onExpandedChange = { expandedTeacher = !expandedTeacher },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                OutlinedTextField(
+                                value = selectedTeacher?.let { "${it.id} ${it.name}T" } ?: "교사를 선택하세요",
+                                onValueChange = { },
+                                    readOnly = true,
+                                    label = { Text("교사") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedTeacher) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .menuAnchor()
+                                )
+
+                                ExposedDropdownMenu(
+                                    expanded = expandedTeacher,
+                                    onDismissRequest = { expandedTeacher = false }
+                                ) {
+                                    teachers.forEach { teacher ->
+                                        DropdownMenuItem(
+                                            text = { 
+                                                Column {
+                                                    Text("${teacher.id} ${teacher.name}T")
+                                                    teacher.subject?.let { subject ->
+                                                        Text(
+                                                            text = subject,
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                        )
+                                                    }
+                                                }
+                                            },
+                                            onClick = {
+                                                selectedTeacher = teacher
+                                                expandedTeacher = false
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Class Selection
-                        ExposedDropdownMenuBox(
-                            expanded = expandedClass,
-                            onExpandedChange = { expandedClass = !expandedClass },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            OutlinedTextField(
-                                value = String.format(stringResource(R.string.classroom_format), selectedClass),
-                                onValueChange = { },
-                                readOnly = true,
-                                label = { Text(stringResource(R.string.classroom)) },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedClass) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .menuAnchor()
-                            )
-
-                            ExposedDropdownMenu(
-                                expanded = expandedClass,
-                                onDismissRequest = { expandedClass = false }
+                        // 새로고침 버튼
+                        if (!isLoading) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            TextButton(
+                                onClick = { teacherViewModel.loadTeachers() },
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                (1..11).forEach { classNum ->
-                                    DropdownMenuItem(
-                                        text = { Text(String.format(stringResource(R.string.classroom_format), classNum)) },
-                                        onClick = {
-                                            selectedClass = classNum
-                                            expandedClass = false
-                                        }
-                                    )
-                                }
+                                Text("교사 목록 새로고침")
                             }
                         }
                     }
@@ -168,7 +176,7 @@ fun InitialSetupScreen(
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         Text(
-                            text = "탐구/기초 과목 선택은 설정 메뉴에서 할 수 있습니다.",
+                            text = "교사를 선택하면 해당 교사의 시간표를 확인할 수 있습니다. 추가 설정은 설정 메뉴에서 변경할 수 있습니다.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -179,14 +187,16 @@ fun InitialSetupScreen(
             // Button at the bottom
             Button(
                 onClick = {
-                    saveSettings(
-                        prefs,
-                        selectedGrade,
-                        selectedClass,
-                        notificationsEnabled
-                    )
-                    onSetupComplete()
+                    selectedTeacher?.let { teacher ->
+                        saveTeacherSettings(
+                            prefs,
+                            teacher,
+                            notificationsEnabled
+                        )
+                        onSetupComplete()
+                    }
                 },
+                enabled = selectedTeacher != null && !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
@@ -197,31 +207,17 @@ fun InitialSetupScreen(
     }
 }
 
-private fun saveSettings(
+private fun saveTeacherSettings(
     prefs: SharedPreferences,
-    grade: Int,
-    classNum: Int,
+    teacher: Teacher,
     notificationsEnabled: Boolean
 ) {
     prefs.edit().apply {
-        putInt("defaultGrade", grade)
-        putInt("defaultClass", classNum)
+        putString("selectedTeacherId", teacher.id)
+        putString("selectedTeacherName", teacher.name)
+        putString("selectedTeacherSubject", teacher.subject)
         putBoolean("notificationsEnabled", notificationsEnabled)
         putBoolean("initialSetupCompleted", true)
         apply()
-    }
-
-    // FCM 토픽 구독
-    if (notificationsEnabled) {
-        val topic = "$grade-$classNum"
-        android.util.Log.d("FCM_DEBUG", "초기 설정 - FCM 토픽 구독: $topic")
-        FirebaseMessaging.getInstance().subscribeToTopic(topic)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    android.util.Log.d("FCM_DEBUG", "초기 설정 - FCM 토픽 구독 성공: $topic")
-                } else {
-                    android.util.Log.e("FCM_DEBUG", "초기 설정 - FCM 토픽 구독 실패: $topic", task.exception)
-                }
-            }
     }
 }

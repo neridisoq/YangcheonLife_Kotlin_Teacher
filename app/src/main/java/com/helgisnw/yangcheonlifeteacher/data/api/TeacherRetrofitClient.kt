@@ -5,8 +5,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-object RetrofitClient {
-    // 기본 URL을 teacher 기반으로 변경
+object TeacherRetrofitClient {
     private const val BASE_URL = "https://comsiteacher.helgisnw.me/"
 
     private val okHttpClient = OkHttpClient.Builder()
@@ -15,12 +14,12 @@ object RetrofitClient {
         })
         .build()
 
-    val apiService: ApiService by lazy {
+    val apiService: TeacherApiService by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(ApiService::class.java)
+            .create(TeacherApiService::class.java)
     }
 }

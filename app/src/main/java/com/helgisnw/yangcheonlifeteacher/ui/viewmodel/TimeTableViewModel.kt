@@ -38,6 +38,18 @@ class TimeTableViewModel : ViewModel() {
         }
     }
 
+    fun loadTeacherSchedule(teacherNumber: String) {
+        viewModelScope.launch {
+            repository.getTeacherSchedule(teacherNumber)
+                .onSuccess { schedule ->
+                    _scheduleState.value = schedule
+                }
+                .onFailure {
+                    // Handle error
+                }
+        }
+    }
+
     fun isCurrentPeriod(period: Int, dayOfWeek: Int): Boolean {
         val calendar = Calendar.getInstance()
         val currentDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)

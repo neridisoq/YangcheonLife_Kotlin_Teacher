@@ -26,7 +26,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.messaging.FirebaseMessaging
 import com.helgisnw.yangcheonlifeteacher.ui.components.TopBar
 
 @Composable
@@ -41,19 +40,34 @@ fun SettingsScreen() {
             Scaffold(
                 topBar = {
                     TopBar(
-                        title = stringResource(R.string.class_settings),
+                        title = "교사 설정",
                         showBackButton = true,
                         onBackClick = { navController.navigateUp() }
                     )
                 }
             ) { paddingValues ->
                 Box(modifier = Modifier.padding(paddingValues)) {
-                    ClassAndGradeSettings()
+                    TeacherSettings()
                 }
             }
         }
         composable("subject_settings") {
             SubjectSelectionScreen(mainNavController = navController)
+        }
+        composable("advanced_settings") {
+            Scaffold(
+                topBar = {
+                    TopBar(
+                        title = "고급 설정",
+                        showBackButton = true,
+                        onBackClick = { navController.navigateUp() }
+                    )
+                }
+            ) { paddingValues ->
+                Box(modifier = Modifier.padding(paddingValues)) {
+                    AdvancedSettingsContent()
+                }
+            }
         }
     }
 }
@@ -106,7 +120,7 @@ private fun SettingsMainContent(navController: NavController) {
                     .clickable { navController.navigate("class_settings") }
             ) {
                 ListItem(
-                    headlineContent = { Text(stringResource(R.string.class_settings)) },
+                    headlineContent = { Text("교사 설정") },
                     leadingContent = { Icon(Icons.Default.School, contentDescription = null) }
                 )
             }
@@ -181,15 +195,21 @@ private fun SettingsMainContent(navController: NavController) {
                             onCheckedChange = { enabled ->
                                 notificationsEnabled = enabled
                                 prefs.edit().putBoolean("notificationsEnabled", enabled).apply()
-
-                                if (enabled) {
-                                    subscribeToCurrentTopic(prefs)
-                                } else {
-                                    unsubscribeFromCurrentTopic(prefs)
-                                }
                             }
                         )
                     }
+                )
+            }
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .clickable { navController.navigate("advanced_settings") }
+            ) {
+                ListItem(
+                    headlineContent = { Text("고급 설정") },
+                    leadingContent = { Icon(Icons.Default.Settings, contentDescription = null) }
                 )
             }
 
@@ -293,16 +313,81 @@ private fun openWebPage(context: android.content.Context, url: String) {
     context.startActivity(intent)
 }
 
-private fun subscribeToCurrentTopic(prefs: SharedPreferences) {
-    val grade = prefs.getInt("defaultGrade", 1)
-    val classNum = prefs.getInt("defaultClass", 1)
-    val topic = "$grade-$classNum"
-    FirebaseMessaging.getInstance().subscribeToTopic(topic)
-}
+@Composable
+private fun AdvancedSettingsContent() {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("app_settings", android.content.Context.MODE_PRIVATE) }
+    var showResetDialog by remember { mutableStateOf(false) }
 
-private fun unsubscribeFromCurrentTopic(prefs: SharedPreferences) {
-    val grade = prefs.getInt("defaultGrade", 1)
-    val classNum = prefs.getInt("defaultClass", 1)
-    val topic = "$grade-$classNum"
-    FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
+    if (showResetDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetDialog = false },
+            title = { Text("설정 초기화") },
+            text = { Text("모든 설정이 초기화됩니다. 계속하시겠습니까?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // 모든 설정 초기화
+                        prefs.edit().clear().apply()
+                        showResetDialog = false
+                        
+                        // 앱 재시작을 위해 MainActivity를 다시 시작
+                        val intent = Intent(context, context::class.java)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                        context.startActivity(intent)
+                        (context as? android.app.Activity)?.finish()
+                    }
+                ) {
+                    Text("확인")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetDialog = false }) {
+                    Text("취소")
+                }
+            }
+        )
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+        ) {
+            Column {
+                ListItem(
+                    headlineContent = { Text("설정 초기화") },
+                    supportingContent = { Text("모든 앱 설정을 초기 상태로 되돌립니다.") },
+                    leadingContent = { Icon(Icons.Default.RestartAlt, contentDescription = null) },
+                    modifier = Modifier.clickable { showResetDialog = true }
+                )
+            }
+        }
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "참고사항",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "설정을 초기화하면 앱이 자동으로 재시작되며, 초기 설정 화면이 다시 표시됩니다.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
 }

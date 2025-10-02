@@ -37,8 +37,9 @@ fun TimeTableScreen(
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("app_settings", Context.MODE_PRIVATE) }
 
-    var selectedGrade by remember { mutableStateOf(prefs.getInt("defaultGrade", 1)) }
-    var selectedClass by remember { mutableStateOf(prefs.getInt("defaultClass", 1)) }
+    // 교사 정보를 SharedPreferences에서 가져오기
+    var selectedTeacherId by remember { mutableStateOf(prefs.getString("selectedTeacherId", "") ?: "") }
+    var selectedTeacherName by remember { mutableStateOf(prefs.getString("selectedTeacherName", "") ?: "") }
 
     val defaultColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f).toArgb()
     var cellBackgroundColor by remember {
@@ -47,9 +48,6 @@ fun TimeTableScreen(
         )
     }
 
-    var expandedGrade by remember { mutableStateOf(false) }
-    var expandedClass by remember { mutableStateOf(false) }
-
     val scheduleState by viewModel.scheduleState.collectAsState()
 
     // Screen size calculation
@@ -57,12 +55,12 @@ fun TimeTableScreen(
     val screenWidth = configuration.screenWidthDp.dp - 32.dp // 좌우 패딩 16dp씩 제외
     val screenHeight = configuration.screenHeightDp.dp
 
-    // Time table total height calculation (top bar height + grade/class selection area height + bottom navigation)
+    // Time table total height calculation (top bar height + teacher info area height + bottom navigation)
     val topBarHeight = 56.dp
-    val selectionAreaHeight = 80.dp
+    val teacherInfoAreaHeight = 80.dp
     val bottomNavHeight = 80.dp // Approximate height of bottom navigation bar
     val totalVerticalPadding = 16.dp // Reduced padding
-    val availableHeight = screenHeight - topBarHeight - selectionAreaHeight - bottomNavHeight - totalVerticalPadding
+    val availableHeight = screenHeight - topBarHeight - teacherInfoAreaHeight - bottomNavHeight - totalVerticalPadding
 
     // Cell size calculation
     val cellSize = minOf(
@@ -70,8 +68,10 @@ fun TimeTableScreen(
         (availableHeight.value / 8).dp
     )
 
-    LaunchedEffect(selectedGrade, selectedClass) {
-        viewModel.loadSchedule(selectedGrade, selectedClass)
+    LaunchedEffect(selectedTeacherId) {
+        if (selectedTeacherId.isNotEmpty()) {
+            viewModel.loadTeacherSchedule(selectedTeacherId)
+        }
     }
 
     Scaffold(
@@ -86,91 +86,46 @@ fun TimeTableScreen(
                 .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // 교사 정보 표시 영역
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
             ) {
-                ExposedDropdownMenuBox(
-                    expanded = expandedGrade,
-                    onExpandedChange = { expandedGrade = !expandedGrade },
-                    modifier = Modifier.weight(1f)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedTextField(
-                        value = String.format(stringResource(R.string.grade_format), selectedGrade),
-                        onValueChange = { },
-                        readOnly = true,
-                        label = { Text(stringResource(R.string.grade)) },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedGrade) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
-                    )
-
-                    ExposedDropdownMenu(
-                        expanded = expandedGrade,
-                        onDismissRequest = { expandedGrade = false }
-                    ) {
-                        (1..3).forEach { grade ->
-                            DropdownMenuItem(
-                                text = { Text(String.format(stringResource(R.string.grade_format), grade)) },
-                                onClick = {
-                                    selectedGrade = grade
-                                    expandedGrade = false
-                                    viewModel.loadSchedule(selectedGrade, selectedClass)
-
-                                    // 학년 변경 시 SharedPreferences 업데이트
-                                    prefs.edit().putInt("defaultGrade", grade).apply()
-                                }
+                    Column(modifier = Modifier.weight(1f)) {
+                        if (selectedTeacherName.isNotEmpty()) {
+                            Text(
+                                text = "담당 교사: $selectedTeacherName",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = "교사 번호: $selectedTeacherId",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            Text(
+                                text = "교사 정보를 불러올 수 없습니다.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error
                             )
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.width(8.dp))
-
-                ExposedDropdownMenuBox(
-                    expanded = expandedClass,
-                    onExpandedChange = { expandedClass = !expandedClass },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    OutlinedTextField(
-                        value = String.format(stringResource(R.string.classroom_format), selectedClass),
-                        onValueChange = { },
-                        readOnly = true,
-                        label = { Text(stringResource(R.string.classroom)) },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedClass) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
-                    )
-
-                    ExposedDropdownMenu(
-                        expanded = expandedClass,
-                        onDismissRequest = { expandedClass = false }
-                    ) {
-                        (1..11).forEach { classNum ->
-                            DropdownMenuItem(
-                                text = { Text(String.format(stringResource(R.string.classroom_format), classNum)) },
-                                onClick = {
-                                    selectedClass = classNum
-                                    expandedClass = false
-                                    viewModel.loadSchedule(selectedGrade, selectedClass)
-
-                                    // 반 변경 시 SharedPreferences 업데이트
-                                    prefs.edit().putInt("defaultClass", classNum).apply()
-                                }
-                            )
+                    IconButton(onClick = {
+                        if (selectedTeacherId.isNotEmpty()) {
+                            viewModel.loadTeacherSchedule(selectedTeacherId)
                         }
+                    }) {
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.refresh))
                     }
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                IconButton(onClick = {
-                    viewModel.loadSchedule(selectedGrade, selectedClass)
-                }) {
-                    Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.refresh))
                 }
             }
 

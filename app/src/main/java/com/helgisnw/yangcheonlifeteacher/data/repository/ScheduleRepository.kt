@@ -15,4 +15,14 @@ class ScheduleRepository {
                 Result.failure(e)
             }
         }
+
+    suspend fun getTeacherSchedule(teacherNumber: String): Result<List<List<ScheduleItem>>> =
+        withContext(Dispatchers.IO) {
+            try {
+                val response = RetrofitClient.apiService.getTeacherSchedule(teacherNumber)
+                Result.success(response)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
 }

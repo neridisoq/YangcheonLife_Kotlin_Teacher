@@ -11,7 +11,148 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.google.firebase.messaging.FirebaseMessaging
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.helgisnw.yangcheonlifeteacher.ui.viewmodel.TeacherViewModel
+import com.helgisnw.yangcheonlifeteacher.data.model.Teacher
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TeacherSettings() {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("app_settings", android.content.Context.MODE_PRIVATE) }
+    val teacherViewModel: TeacherViewModel = viewModel()
+
+    var selectedTeacher by remember { 
+        mutableStateOf<Teacher?>(
+            run {
+                val savedId = prefs.getString("selectedTeacherId", "")
+                val savedName = prefs.getString("selectedTeacherName", "")
+                if (!savedId.isNullOrEmpty() && !savedName.isNullOrEmpty()) {
+                    Teacher(
+                        id = savedId,
+                        name = savedName,
+                        subject = prefs.getString("selectedTeacherSubject", "")
+                    )
+                } else null
+            }
+        )
+    }
+    var notificationsEnabled by remember { mutableStateOf(prefs.getBoolean("notificationsEnabled", true)) }
+    var expandedTeacher by remember { mutableStateOf(false) }
+
+    val teachers by teacherViewModel.teachers.collectAsState()
+    val isLoading by teacherViewModel.isLoading.collectAsState()
+    val error by teacherViewModel.error.collectAsState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = androidx.compose.ui.Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            ExposedDropdownMenuBox(
+                expanded = expandedTeacher,
+                onExpandedChange = { expandedTeacher = !expandedTeacher },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(
+                    value = selectedTeacher?.let { "${it.id} ${it.name}T" } ?: "교사를 선택하세요",
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text("교사") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedTeacher) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expandedTeacher,
+                    onDismissRequest = { expandedTeacher = false }
+                ) {
+                    teachers.forEach { teacher ->
+                        DropdownMenuItem(
+                            text = { 
+                                Column {
+                                    Text("${teacher.id} ${teacher.name}T")
+                                    teacher.subject?.let { subject ->
+                                        Text(
+                                            text = subject,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            },
+                            onClick = {
+                                selectedTeacher = teacher
+                                expandedTeacher = false
+                                updateTeacherSettings(prefs, teacher, notificationsEnabled)
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 새로고침 버튼
+        if (!isLoading) {
+            OutlinedButton(
+                onClick = { teacherViewModel.loadTeachers() },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("교사 목록 새로고침")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        selectedTeacher?.let { teacher ->
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "선택된 교사 정보",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Text(text = "이름: ${teacher.name}")
+                    teacher.subject?.let { subject ->
+                        Text(text = "과목: $subject")
+                    }
+                    Text(text = "번호: ${teacher.id}")
+                }
+            }
+        }
+
+        error?.let { errorMessage ->
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Text(
+                    text = errorMessage,
+                    modifier = Modifier.padding(16.dp),
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -260,53 +401,28 @@ fun SubjectSelectionSettings() {
     }
 }
 
+private fun updateTeacherSettings(
+    prefs: SharedPreferences,
+    teacher: Teacher,
+    notificationsEnabled: Boolean
+) {
+    prefs.edit().apply {
+        putString("selectedTeacherId", teacher.id)
+        putString("selectedTeacherName", teacher.name)
+        putString("selectedTeacherSubject", teacher.subject)
+        apply()
+    }
+}
+
 private fun updateClassSettings(
     prefs: SharedPreferences,
     grade: Int,
     classNum: Int,
     notificationsEnabled: Boolean
 ) {
-    val oldGrade = prefs.getInt("defaultGrade", 1)
-    val oldClass = prefs.getInt("defaultClass", 1)
-    val oldTopic = "$oldGrade-$oldClass"
-    val newTopic = "$grade-$classNum"
-
     prefs.edit().apply {
         putInt("defaultGrade", grade)
         putInt("defaultClass", classNum)
         apply()
-    }
-
-    if (notificationsEnabled) {
-        android.util.Log.d("FCM_DEBUG", "FCM 토픽 변경: $oldTopic → $newTopic")
-
-        FirebaseMessaging.getInstance().unsubscribeFromTopic(oldTopic)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    android.util.Log.d("FCM_DEBUG", "FCM 토픽 구독 해제 성공: $oldTopic")
-
-                    // 해제 성공 후 새 토픽 구독
-                    FirebaseMessaging.getInstance().subscribeToTopic(newTopic)
-                        .addOnCompleteListener { subTask ->
-                            if (subTask.isSuccessful) {
-                                android.util.Log.d("FCM_DEBUG", "FCM 토픽 구독 성공: $newTopic")
-                            } else {
-                                android.util.Log.e("FCM_DEBUG", "FCM 토픽 구독 실패: $newTopic", subTask.exception)
-                            }
-                        }
-                } else {
-                    android.util.Log.e("FCM_DEBUG", "FCM 토픽 구독 해제 실패: $oldTopic", task.exception)
-
-                    // 해제 실패해도 새 토픽은 구독 시도
-                    FirebaseMessaging.getInstance().subscribeToTopic(newTopic)
-                        .addOnCompleteListener { subTask ->
-                            if (subTask.isSuccessful) {
-                                android.util.Log.d("FCM_DEBUG", "FCM 토픽 구독 성공: $newTopic")
-                            } else {
-                                android.util.Log.e("FCM_DEBUG", "FCM 토픽 구독 실패: $newTopic", subTask.exception)
-                            }
-                        }
-                }
-            }
     }
 }
