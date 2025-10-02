@@ -26,8 +26,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.helgisnw.yangcheonlifeteacher.data.model.ScheduleItem
+import com.helgisnw.yangcheonlifeteacher.data.model.Teacher
 import com.helgisnw.yangcheonlifeteacher.ui.components.TopBar
 import com.helgisnw.yangcheonlifeteacher.ui.viewmodel.TimeTableViewModel
+import com.helgisnw.yangcheonlifeteacher.ui.viewmodel.TeacherViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,10 +38,28 @@ fun TimeTableScreen(
 ) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("app_settings", Context.MODE_PRIVATE) }
+    val teacherViewModel: TeacherViewModel = viewModel()
 
     // 교사 정보를 SharedPreferences에서 가져오기
-    var selectedTeacherId by remember { mutableStateOf(prefs.getString("selectedTeacherId", "") ?: "") }
-    var selectedTeacherName by remember { mutableStateOf(prefs.getString("selectedTeacherName", "") ?: "") }
+    var selectedTeacher by remember { 
+        mutableStateOf<Teacher?>(
+            run {
+                val savedId = prefs.getString("selectedTeacherId", "")
+                val savedName = prefs.getString("selectedTeacherName", "")
+                if (!savedId.isNullOrEmpty() && !savedName.isNullOrEmpty()) {
+                    Teacher(
+                        id = savedId,
+                        name = savedName,
+                        subject = prefs.getString("selectedTeacherSubject", "")
+                    )
+                } else null
+            }
+        )
+    }
+    var expandedTeacher by remember { mutableStateOf(false) }
+
+    val teachers by teacherViewModel.teachers.collectAsState()
+    val isLoadingTeachers by teacherViewModel.isLoading.collectAsState()
 
     val defaultColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f).toArgb()
     var cellBackgroundColor by remember {
@@ -55,12 +75,12 @@ fun TimeTableScreen(
     val screenWidth = configuration.screenWidthDp.dp - 32.dp // 좌우 패딩 16dp씩 제외
     val screenHeight = configuration.screenHeightDp.dp
 
-    // Time table total height calculation (top bar height + teacher info area height + bottom navigation)
+    // Time table total height calculation (top bar height + teacher selection area height + bottom navigation)
     val topBarHeight = 56.dp
-    val teacherInfoAreaHeight = 80.dp
+    val teacherSelectionAreaHeight = 80.dp
     val bottomNavHeight = 80.dp // Approximate height of bottom navigation bar
     val totalVerticalPadding = 16.dp // Reduced padding
-    val availableHeight = screenHeight - topBarHeight - teacherInfoAreaHeight - bottomNavHeight - totalVerticalPadding
+    val availableHeight = screenHeight - topBarHeight - teacherSelectionAreaHeight - bottomNavHeight - totalVerticalPadding
 
     // Cell size calculation
     val cellSize = minOf(
@@ -68,9 +88,9 @@ fun TimeTableScreen(
         (availableHeight.value / 8).dp
     )
 
-    LaunchedEffect(selectedTeacherId) {
-        if (selectedTeacherId.isNotEmpty()) {
-            viewModel.loadTeacherSchedule(selectedTeacherId)
+    LaunchedEffect(selectedTeacher?.id) {
+        selectedTeacher?.id?.let { teacherId ->
+            viewModel.loadTeacherSchedule(teacherId)
         }
     }
 
@@ -86,7 +106,7 @@ fun TimeTableScreen(
                 .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 교사 정보 표시 영역
+            // 교사 선택 영역
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -99,29 +119,79 @@ fun TimeTableScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        if (selectedTeacherName.isNotEmpty()) {
-                            Text(
-                                text = "담당 교사: $selectedTeacherName",
-                                style = MaterialTheme.typography.titleMedium
+                    if (isLoadingTeachers) {
+                        Box(
+                            modifier = Modifier.weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    } else {
+                        // Teacher Selection Dropdown
+                        ExposedDropdownMenuBox(
+                            expanded = expandedTeacher,
+                            onExpandedChange = { expandedTeacher = !expandedTeacher },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            OutlinedTextField(
+                                value = selectedTeacher?.let { "${it.id} ${it.name}T" } ?: "선생님을 선택하세요",
+                                onValueChange = { },
+                                readOnly = true,
+                                label = { Text("선생님") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedTeacher) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor()
                             )
-                            Text(
-                                text = "교사 번호: $selectedTeacherId",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        } else {
-                            Text(
-                                text = "교사 정보를 불러올 수 없습니다.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.error
-                            )
+
+                            ExposedDropdownMenu(
+                                expanded = expandedTeacher,
+                                onDismissRequest = { expandedTeacher = false }
+                            ) {
+                                teachers.forEach { teacher ->
+                                    DropdownMenuItem(
+                                        text = { 
+                                            Column {
+                                                Text("${teacher.id} ${teacher.name}T")
+                                                teacher.subject?.let { subject ->
+                                                    Text(
+                                                        text = subject,
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
+                                            }
+                                        },
+                                        onClick = {
+                                            selectedTeacher = teacher
+                                            expandedTeacher = false
+                                            
+                                            // SharedPreferences에 저장
+                                            prefs.edit().apply {
+                                                putString("selectedTeacherId", teacher.id)
+                                                putString("selectedTeacherName", teacher.name)
+                                                putString("selectedTeacherSubject", teacher.subject)
+                                                apply()
+                                            }
+                                            
+                                            // 시간표 로드
+                                            viewModel.loadTeacherSchedule(teacher.id)
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
 
+                    Spacer(modifier = Modifier.width(8.dp))
+
                     IconButton(onClick = {
-                        if (selectedTeacherId.isNotEmpty()) {
-                            viewModel.loadTeacherSchedule(selectedTeacherId)
+                        // 교사 목록 새로고침
+                        teacherViewModel.loadTeachers()
+                        
+                        // 선택된 교사가 있으면 시간표도 새로고침
+                        selectedTeacher?.id?.let { teacherId ->
+                            viewModel.loadTeacherSchedule(teacherId)
                         }
                     }) {
                         Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.refresh))

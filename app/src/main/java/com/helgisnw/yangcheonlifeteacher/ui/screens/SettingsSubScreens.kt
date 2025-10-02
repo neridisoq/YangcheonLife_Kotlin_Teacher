@@ -63,10 +63,10 @@ fun TeacherSettings() {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 OutlinedTextField(
-                    value = selectedTeacher?.let { "${it.id} ${it.name}T" } ?: "교사를 선택하세요",
+                    value = selectedTeacher?.let { "${it.id} ${it.name}T" } ?: "선생님을 선택하세요",
                     onValueChange = { },
                     readOnly = true,
-                    label = { Text("교사") },
+                    label = { Text("선생님") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedTeacher) },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -110,7 +110,7 @@ fun TeacherSettings() {
                 onClick = { teacherViewModel.loadTeachers() },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("교사 목록 새로고침")
+                Text("선생님 목록 새로고침")
             }
         }
 
@@ -124,7 +124,7 @@ fun TeacherSettings() {
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "선택된 교사 정보",
+                        text = "선택된 선생님 정보",
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )

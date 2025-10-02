@@ -40,7 +40,7 @@ fun SettingsScreen() {
             Scaffold(
                 topBar = {
                     TopBar(
-                        title = "교사 설정",
+                        title = "선생님 설정",
                         showBackButton = true,
                         onBackClick = { navController.navigateUp() }
                     )
@@ -50,9 +50,6 @@ fun SettingsScreen() {
                     TeacherSettings()
                 }
             }
-        }
-        composable("subject_settings") {
-            SubjectSelectionScreen(mainNavController = navController)
         }
         composable("advanced_settings") {
             Scaffold(
@@ -120,20 +117,8 @@ private fun SettingsMainContent(navController: NavController) {
                     .clickable { navController.navigate("class_settings") }
             ) {
                 ListItem(
-                    headlineContent = { Text("교사 설정") },
+                    headlineContent = { Text("선생님 설정") },
                     leadingContent = { Icon(Icons.Default.School, contentDescription = null) }
-                )
-            }
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .clickable { navController.navigate("subject_settings") }
-            ) {
-                ListItem(
-                    headlineContent = { Text("탐구/기초 과목 선택") },
-                    leadingContent = { Icon(Icons.Default.Book, contentDescription = null) }
                 )
             }
 

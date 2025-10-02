@@ -35,7 +35,7 @@ class TeacherViewModel : ViewModel() {
                     _teachers.value = teacherList
                 }
                 .onFailure { throwable ->
-                    _error.value = throwable.message ?: "교사 목록을 불러오는데 실패했습니다."
+                    _error.value = throwable.message ?: "선생님 목록을 불러오는데 실패했습니다."
                 }
             
             _isLoading.value = false

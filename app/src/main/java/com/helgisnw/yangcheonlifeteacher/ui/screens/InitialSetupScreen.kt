@@ -66,7 +66,7 @@ fun InitialSetupScreen(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = "교사 선택",
+                            text = "선생님 선택",
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
@@ -86,10 +86,10 @@ fun InitialSetupScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 OutlinedTextField(
-                                value = selectedTeacher?.let { "${it.id} ${it.name}T" } ?: "교사를 선택하세요",
+                                value = selectedTeacher?.let { "${it.id} ${it.name}T" } ?: "선생님을 선택하세요",
                                 onValueChange = { },
                                     readOnly = true,
-                                    label = { Text("교사") },
+                                    label = { Text("선생님") },
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedTeacher) },
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -131,7 +131,7 @@ fun InitialSetupScreen(
                                 onClick = { teacherViewModel.loadTeachers() },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("교사 목록 새로고침")
+                                Text("선생님 목록 새로고침")
                             }
                         }
                     }
@@ -176,7 +176,7 @@ fun InitialSetupScreen(
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         Text(
-                            text = "교사를 선택하면 해당 교사의 시간표를 확인할 수 있습니다. 추가 설정은 설정 메뉴에서 변경할 수 있습니다.",
+                            text = "선생님을 선택하면 해당 선생님의 시간표를 확인할 수 있습니다. 추가 설정은 설정 메뉴에서 변경할 수 있습니다.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
