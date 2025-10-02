@@ -33,6 +33,7 @@ import com.helgisnw.yangcheonlifeteacher.data.model.WiFiConnectionResult
 import com.helgisnw.yangcheonlifeteacher.data.service.WiFiService
 import com.helgisnw.yangcheonlifeteacher.ui.viewmodel.TimeTableViewModel
 import com.helgisnw.yangcheonlifeteacher.ui.viewmodel.TeacherViewModel
+import com.helgisnw.yangcheonlifeteacher.widget.TeacherScheduleWidgetUpdater
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,6 +84,7 @@ fun TimeTableScreen(
     LaunchedEffect(selectedTeacher?.id) {
         selectedTeacher?.id?.let { teacherId ->
             viewModel.loadTeacherSchedule(teacherId)
+            TeacherScheduleWidgetUpdater.requestImmediateUpdate(context)
         }
     }
 
@@ -203,6 +205,7 @@ fun TimeTableScreen(
                                             
                                             // 시간표 로드
                                             viewModel.loadTeacherSchedule(teacher.id)
+                                            TeacherScheduleWidgetUpdater.requestImmediateUpdate(context)
                                         }
                                     )
                                 }
@@ -219,6 +222,7 @@ fun TimeTableScreen(
                         // 선택된 교사가 있으면 시간표도 새로고침
                         selectedTeacher?.id?.let { teacherId ->
                             viewModel.loadTeacherSchedule(teacherId)
+                            TeacherScheduleWidgetUpdater.requestImmediateUpdate(context)
                         }
                     }) {
                         Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.refresh))

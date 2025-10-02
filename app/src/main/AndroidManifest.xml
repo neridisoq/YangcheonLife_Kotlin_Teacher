@@ -19,6 +19,9 @@
     <!-- 백그라운드 실행 권한 -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
+    <!-- 광고 ID 권한 제거 -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+
     <application
             android:name=".YangcheonLifeApp"
             android:allowBackup="true"
@@ -81,6 +84,17 @@
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
+        </receiver>
+        <receiver
+                android:name=".widget.TeacherScheduleWidgetReceiver"
+                android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                    android:name="android.appwidget.provider"
+                    android:resource="@xml/teacher_schedule_widget_info" />
         </receiver>
     </application>
 </manifest>

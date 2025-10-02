@@ -5,6 +5,9 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import android.util.Log
+import androidx.work.Configuration
+import androidx.work.WorkManager
 import com.google.firebase.FirebaseApp
 
 class YangcheonLifeApp : Application() {
@@ -16,7 +19,15 @@ class YangcheonLifeApp : Application() {
     override fun onCreate() {
         super.onCreate()
         FirebaseApp.initializeApp(this)
+        initializeWorkManager()
         createNotificationChannel()
+    }
+
+    private fun initializeWorkManager() {
+        val configuration = Configuration.Builder()
+            .setMinimumLoggingLevel(Log.INFO)
+            .build()
+        WorkManager.initialize(this, configuration)
     }
 
     private fun createNotificationChannel() {

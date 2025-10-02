@@ -65,4 +65,18 @@
     <string name="time_period_5">13:10 ~ 14:00</string>
     <string name="time_period_6">14:10 ~ 15:00</string>
     <string name="time_period_7">15:10 ~ 16:00</string>
+
+    <!-- Widgets -->
+    <string name="widget_missing_teacher_title">선생님을 선택하세요</string>
+    <string name="widget_missing_teacher_body">앱에서 선생님을 선택하면 위젯에 시간표가 표시됩니다.</string>
+    <string name="widget_update_error_title">위젯 업데이트 오류</string>
+    <string name="widget_update_error_body">시간표를 불러오는 중 문제가 발생했습니다. 네트워크를 확인한 후 다시 시도해주세요.</string>
+    <string name="widget_weekend_message">주말에는 수업이 없어요.</string>
+    <string name="widget_no_lessons_today">오늘은 수업이 없습니다.</string>
+    <string name="widget_all_done_message">오늘 수업이 모두 끝났습니다.</string>
+    <string name="widget_teacher_suffix_format">%1$sT</string>
+    <string name="widget_next_class_label">다음 수업</string>
+    <string name="widget_in_progress_label">진행 중</string>
+    <string name="widget_no_upcoming_class">다음 수업이 없습니다.</string>
+    <string name="widget_empty_period">수업 없음</string>
 </resources>

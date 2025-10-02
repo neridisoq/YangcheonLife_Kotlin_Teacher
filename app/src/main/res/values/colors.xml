@@ -51,4 +51,13 @@
     <color name="md_theme_dark_outline">#938F99</color>
     <color name="md_theme_dark_inverseOnSurface">#1C1B1F</color>
     <color name="md_theme_dark_inverseSurface">#E6E1E5</color>
+
+    <!-- Widget specific colors -->
+    <color name="widget_chip_background">#FFE3F2FD</color>
+    <color name="widget_text_secondary">#FF5F6368</color>
+    
+    <!-- Widget Background Colors -->
+    <color name="widget_background">#FFFFFFFF</color>
+    <color name="widget_text_primary">#FF000000</color>
+    <color name="widget_period_background">#FFF5F5F5</color>
 </resources>
