@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.helgisnw.yangcheonlifeteacher.ui.components.TopBar
 
 @Composable
 fun SubjectSelectionScreen(mainNavController: NavHostController) {
@@ -81,15 +80,7 @@ fun GroupSelectionContent(
     onGroupSelected: (String) -> Unit,
     onBackClick: () -> Unit
 ) {
-    Scaffold(
-        topBar = {
-            TopBar(
-                title = "${grade}학년 분반 선택",
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        }
-    ) { paddingValues ->
+    Scaffold { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -152,15 +143,7 @@ fun ClassSelectionContent(
 ) {
     val classMappings = getClassList(grade, groupType)
 
-    Scaffold(
-        topBar = {
-            TopBar(
-                title = "${grade}학년 $groupType 선택",
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        }
-    ) { paddingValues ->
+    Scaffold { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -202,15 +185,7 @@ fun SubjectSelectionContent(
 
     val subjects = getSubjectsForClass(grade, className)
 
-    Scaffold(
-        topBar = {
-            TopBar(
-                title = "${grade}학년 $className 과목 선택",
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        }
-    ) { paddingValues ->
+    Scaffold { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()

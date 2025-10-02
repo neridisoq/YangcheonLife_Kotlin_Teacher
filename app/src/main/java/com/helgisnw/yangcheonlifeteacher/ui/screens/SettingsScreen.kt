@@ -3,6 +3,22 @@ package com.helgisnw.yangcheonlifeteacher.ui.screens
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
+import android.content.Context
+import android.net.wifi.WifiManager
+import android.net.wifi.WifiNetworkSuggestion
+import android.os.Build
+import androidx.annotation.RequiresApi
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Divider
+import androidx.compose.runtime.rememberCoroutineScope
+import com.helgisnw.yangcheonlifeteacher.data.model.SpecialRoomsData
+import com.helgisnw.yangcheonlifeteacher.data.model.WiFiConnectionResult
+import com.helgisnw.yangcheonlifeteacher.data.service.WiFiService
 import com.helgisnw.yangcheonlifeteacher.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -22,11 +39,12 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.helgisnw.yangcheonlifeteacher.ui.components.TopBar
 
 @Composable
 fun SettingsScreen() {
@@ -37,32 +55,23 @@ fun SettingsScreen() {
             SettingsMainContent(navController)
         }
         composable("class_settings") {
-            Scaffold(
-                topBar = {
-                    TopBar(
-                        title = "선생님 설정",
-                        showBackButton = true,
-                        onBackClick = { navController.navigateUp() }
-                    )
-                }
-            ) { paddingValues ->
+            Scaffold { paddingValues ->
                 Box(modifier = Modifier.padding(paddingValues)) {
                     TeacherSettings()
                 }
             }
         }
         composable("advanced_settings") {
-            Scaffold(
-                topBar = {
-                    TopBar(
-                        title = "고급 설정",
-                        showBackButton = true,
-                        onBackClick = { navController.navigateUp() }
-                    )
-                }
-            ) { paddingValues ->
+            Scaffold { paddingValues ->
                 Box(modifier = Modifier.padding(paddingValues)) {
                     AdvancedSettingsContent()
+                }
+            }
+        }
+        composable("wifi_settings") {
+            Scaffold { paddingValues ->
+                Box(modifier = Modifier.padding(paddingValues)) {
+                    WiFiConnectionContent()
                 }
             }
         }
@@ -99,11 +108,7 @@ private fun SettingsMainContent(navController: NavController) {
         )
     }
 
-    Scaffold(
-        topBar = {
-            TopBar(title = stringResource(R.string.settings))
-        }
-    ) { paddingValues ->
+    Scaffold { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -183,6 +188,18 @@ private fun SettingsMainContent(navController: NavController) {
                             }
                         )
                     }
+                )
+            }
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .clickable { navController.navigate("wifi_settings") }
+            ) {
+                ListItem(
+                    headlineContent = { Text("WiFi 연결") },
+                    leadingContent = { Icon(Icons.Default.Wifi, contentDescription = null) }
                 )
             }
 
@@ -291,6 +308,289 @@ private fun ColorItem(
                 }
             )
     )
+}
+
+@Composable
+private fun WiFiConnectionContent() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val wifiService = remember { WiFiService(context) }
+    
+    var selectedTab by remember { mutableStateOf(2) } // 기본값: 3학년
+    var connectionResult by remember { mutableStateOf<WiFiConnectionResult?>(null) }
+    var showResult by remember { mutableStateOf(false) }
+    var isConnecting by remember { mutableStateOf(false) }
+
+    val tabTitles = listOf("1학년", "2학년", "3학년", "특별실")
+    
+    if (showResult) {
+        AlertDialog(
+            onDismissRequest = { showResult = false },
+            title = { Text("WiFi 연결 결과") },
+            text = { 
+                connectionResult?.let { result ->
+                    Text(result.message)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { 
+                    showResult = false
+                    // WiFi 설정 화면 열기
+                    try {
+                        val intent = android.content.Intent(android.provider.Settings.Panel.ACTION_WIFI)
+                        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        context.startActivity(intent)
+                    } catch (e: Exception) {
+                        try {
+                            val intent = android.content.Intent(android.provider.Settings.ACTION_WIFI_SETTINGS)
+                            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            context.startActivity(intent)
+                        } catch (e2: Exception) {
+                            // 무시
+                        }
+                    }
+                }) {
+                    Text("WiFi 설정 열기")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResult = false }) {
+                    Text("닫기")
+                }
+            }
+        )
+    }
+
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // 탭 선택
+        TabRow(
+            selectedTabIndex = selectedTab,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            tabTitles.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTab == index,
+                    onClick = { selectedTab = index },
+                    text = { Text(title) }
+                )
+            }
+        }
+
+        // 컨텐츠
+        when (selectedTab) {
+            0 -> GradeClassroomContent(1, wifiService, isConnecting) { result ->
+                connectionResult = result
+                showResult = true
+                isConnecting = false
+            }
+            1 -> GradeClassroomContent(2, wifiService, isConnecting) { result ->
+                connectionResult = result
+                showResult = true
+                isConnecting = false
+            }
+            2 -> GradeClassroomContent(3, wifiService, isConnecting) { result ->
+                connectionResult = result
+                showResult = true
+                isConnecting = false
+            }
+            3 -> SpecialRoomContent(wifiService, isConnecting) { result ->
+                connectionResult = result
+                showResult = true
+                isConnecting = false
+            }
+        }
+    }
+}
+
+@Composable
+private fun GradeClassroomContent(
+    grade: Int,
+    wifiService: WiFiService,
+    isConnecting: Boolean,
+    onResult: (WiFiConnectionResult) -> Unit
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "교실별 WiFi 연결 도우미",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Text(
+                        text = "• 연결하기 버튼을 누르면 WiFi 설정 화면이 열립니다.\n" +
+                              "• '양천고라이프 앱을 통해 추천됨' 항목을 찾아 연결하세요.\n" +
+                              "• 또는 해당 교실의 SSID를 직접 검색하여 연결하세요.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+        
+        items((1..11).toList()) { classNumber ->
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "${grade}학년 ${classNumber}반",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = "SSID: ${grade}-${classNumber}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    
+                    Button(
+                        onClick = {
+                            if (wifiService.isWiFiSuggestionSupported()) {
+                                scope.launch {
+                                    val result = wifiService.connectToClassroom(grade, classNumber)
+                                    onResult(result)
+                                }
+                            } else {
+                                onResult(
+                                    WiFiConnectionResult(
+                                        isSuccess = false,
+                                        message = "이 기능은 안드로이드 10 (API 29) 이상에서만 지원됩니다.",
+                                        connectionType = com.helgisnw.yangcheonlifeteacher.data.model.WiFiConnectionType.RegularClassroom(grade, classNumber)
+                                    )
+                                )
+                            }
+                        },
+                        enabled = !isConnecting
+                    ) {
+                        if (isConnecting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("연결")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpecialRoomContent(
+    wifiService: WiFiService,
+    isConnecting: Boolean,
+    onResult: (WiFiConnectionResult) -> Unit
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val specialRooms = SpecialRoomsData.allRooms
+    
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "특별실 WiFi 연결 도우미",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Text(
+                        text = "• 연결하기 버튼을 누르면 WiFi 설정 화면이 열립니다.\n" +
+                              "• '양천고라이프 앱을 통해 추천됨' 항목 또는 해당 특별실 SSID를 찾아 연결하세요.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+        
+        items(specialRooms) { room ->
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = room.name,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = "SSID: ${room.ssid}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    
+                    Button(
+                        onClick = {
+                            if (wifiService.isWiFiSuggestionSupported()) {
+                                scope.launch {
+                                    val result = wifiService.connectToSpecialRoom(room)
+                                    onResult(result)
+                                }
+                            } else {
+                                onResult(
+                                    WiFiConnectionResult(
+                                        isSuccess = false,
+                                        message = "이 기능은 안드로이드 10 (API 29) 이상에서만 지원됩니다.",
+                                        connectionType = com.helgisnw.yangcheonlifeteacher.data.model.WiFiConnectionType.SpecialRoom(room)
+                                    )
+                                )
+                            }
+                        },
+                        enabled = !isConnecting
+                    ) {
+                        if (isConnecting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("연결")
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 private fun openWebPage(context: android.content.Context, url: String) {

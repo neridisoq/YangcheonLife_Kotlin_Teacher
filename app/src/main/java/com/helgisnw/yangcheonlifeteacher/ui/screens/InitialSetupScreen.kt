@@ -13,7 +13,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.helgisnw.yangcheonlifeteacher.R
-import com.helgisnw.yangcheonlifeteacher.ui.components.TopBar
 import com.helgisnw.yangcheonlifeteacher.ui.viewmodel.TeacherViewModel
 import com.helgisnw.yangcheonlifeteacher.data.model.Teacher
 
@@ -42,11 +41,7 @@ fun InitialSetupScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopBar(title = stringResource(R.string.initial_setup))
-        }
-    ) { paddingValues ->
+    Scaffold { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()

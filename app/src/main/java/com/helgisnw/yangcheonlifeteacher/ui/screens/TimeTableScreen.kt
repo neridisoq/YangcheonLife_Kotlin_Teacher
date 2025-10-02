@@ -2,22 +2,24 @@ package com.helgisnw.yangcheonlifeteacher.ui.screens
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
+import androidx.annotation.RequiresApi
+import kotlinx.coroutines.launch
 import com.helgisnw.yangcheonlifeteacher.R
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -27,7 +29,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.helgisnw.yangcheonlifeteacher.data.model.ScheduleItem
 import com.helgisnw.yangcheonlifeteacher.data.model.Teacher
-import com.helgisnw.yangcheonlifeteacher.ui.components.TopBar
+import com.helgisnw.yangcheonlifeteacher.data.model.WiFiConnectionResult
+import com.helgisnw.yangcheonlifeteacher.data.service.WiFiService
 import com.helgisnw.yangcheonlifeteacher.ui.viewmodel.TimeTableViewModel
 import com.helgisnw.yangcheonlifeteacher.ui.viewmodel.TeacherViewModel
 
@@ -39,6 +42,13 @@ fun TimeTableScreen(
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("app_settings", Context.MODE_PRIVATE) }
     val teacherViewModel: TeacherViewModel = viewModel()
+    val scope = rememberCoroutineScope()
+    val wifiService = remember { WiFiService(context) }
+    
+    // WiFi 연결 관련 상태
+    var showWifiResult by remember { mutableStateOf(false) }
+    var wifiConnectionResult by remember { mutableStateOf<WiFiConnectionResult?>(null) }
+    var isConnectingWifi by remember { mutableStateOf(false) }
 
     // 교사 정보를 SharedPreferences에서 가져오기
     var selectedTeacher by remember { 
@@ -70,52 +80,69 @@ fun TimeTableScreen(
 
     val scheduleState by viewModel.scheduleState.collectAsState()
 
-    // Screen size calculation
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp - 32.dp // 좌우 패딩 16dp씩 제외
-    val screenHeight = configuration.screenHeightDp.dp
-
-    // Time table total height calculation (top bar height + teacher selection area height + bottom navigation)
-    val topBarHeight = 56.dp
-    val teacherSelectionAreaHeight = 80.dp
-    val bottomNavHeight = 80.dp // Approximate height of bottom navigation bar
-    val totalVerticalPadding = 16.dp // Reduced padding
-    val availableHeight = screenHeight - topBarHeight - teacherSelectionAreaHeight - bottomNavHeight - totalVerticalPadding
-
-    // Cell size calculation
-    val cellSize = minOf(
-        (screenWidth.value / 6).dp,
-        (availableHeight.value / 8).dp
-    )
-
     LaunchedEffect(selectedTeacher?.id) {
         selectedTeacher?.id?.let { teacherId ->
             viewModel.loadTeacherSchedule(teacherId)
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopBar(title = stringResource(R.string.timetable))
-        }
-    ) { paddingValues ->
+    // WiFi 연결 결과 다이얼로그
+    if (showWifiResult) {
+        AlertDialog(
+            onDismissRequest = { showWifiResult = false },
+            title = { Text("WiFi 연결 결과") },
+            text = { 
+                wifiConnectionResult?.let { result ->
+                    Text(result.message)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { 
+                    showWifiResult = false
+                    // WiFi 설정 화면 열기
+                    try {
+                        val intent = android.content.Intent(android.provider.Settings.Panel.ACTION_WIFI)
+                        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        context.startActivity(intent)
+                    } catch (e: Exception) {
+                        try {
+                            val intent = android.content.Intent(android.provider.Settings.ACTION_WIFI_SETTINGS)
+                            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            context.startActivity(intent)
+                        } catch (e2: Exception) {
+                            // 무시
+                        }
+                    }
+                }) {
+                    Text("WiFi 설정 열기")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showWifiResult = false }) {
+                    Text("닫기")
+                }
+            }
+        )
+    }
+
+    Scaffold { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp),
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // 교사 선택 영역
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                    .padding(vertical = 4.dp)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -199,40 +226,73 @@ fun TimeTableScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // 시간표 그리드를 가운데 정렬
-            Box(
+            // 시간표 - 사용 가능한 영역 내에서 1:1 비율 유지
+            BoxWithConstraints(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentSize(Alignment.Center)
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(6),
+                val widthBasedCell = maxWidth / 6
+                val heightBasedCell = if (maxHeight == Dp.Unspecified || !maxHeight.value.isFinite()) {
+                    widthBasedCell
+                } else {
+                    maxHeight / 8
+                }
+                val cellSize = minOf(widthBasedCell, heightBasedCell).coerceAtLeast(0.dp)
+                val tableWidth = cellSize * 6
+                val tableHeight = cellSize * 8
+
+                Column(
                     modifier = Modifier
-                        .width(cellSize * 6)
-                        .height(cellSize * 8)
+                        .width(tableWidth)
+                        .height(tableHeight)
                 ) {
                     // Header row
-                    items(6) { col ->
-                        HeaderCell(col, cellSize)
+                    Row {
+                        repeat(6) { col ->
+                            HeaderCell(col, cellSize)
+                        }
                     }
 
-                    // Time slots and schedule
+                    // Time slots and schedule rows
                     repeat(7) { row ->
-                        item {
+                        Row {
+                            // Time slot cell
                             TimeSlotCell(row + 1, cellSize)
-                        }
-
-                        items(5) { col ->
-                            val scheduleItem = scheduleState.getOrNull(col)?.getOrNull(row)
-                            ScheduleCell(
-                                scheduleItem = scheduleItem,
-                                isCurrentPeriod = viewModel.isCurrentPeriod(row + 1, col + 1),
-                                backgroundColor = cellBackgroundColor,
-                                prefs = prefs,
-                                cellSize = cellSize
-                            )
+                            
+                            // Schedule cells for each day
+                            repeat(5) { col ->
+                                val scheduleItem = scheduleState.getOrNull(col)?.getOrNull(row)
+                                ScheduleCell(
+                                    scheduleItem = scheduleItem,
+                                    isCurrentPeriod = viewModel.isCurrentPeriod(row + 1, col + 1),
+                                    backgroundColor = cellBackgroundColor,
+                                    prefs = prefs,
+                                    cellSize = cellSize,
+                                    onWifiConnect = { grade, classNumber ->
+                                        if (wifiService.isWiFiSuggestionSupported()) {
+                                            isConnectingWifi = true
+                                            scope.launch {
+                                                val result = wifiService.connectToClassroom(grade, classNumber)
+                                                wifiConnectionResult = result
+                                                showWifiResult = true
+                                                isConnectingWifi = false
+                                            }
+                                        } else {
+                                            wifiConnectionResult = WiFiConnectionResult(
+                                                isSuccess = false,
+                                                message = "이 기능은 안드로이드 10 (API 29) 이상에서만 지원됩니다.",
+                                                connectionType = com.helgisnw.yangcheonlifeteacher.data.model.WiFiConnectionType.RegularClassroom(grade, classNumber)
+                                            )
+                                            showWifiResult = true
+                                        }
+                                    },
+                                    isConnectingWifi = isConnectingWifi
+                                )
+                            }
                         }
                     }
                 }
@@ -301,8 +361,23 @@ private fun ScheduleCell(
     isCurrentPeriod: Boolean,
     backgroundColor: Color,
     prefs: SharedPreferences,
-    cellSize: Dp
+    cellSize: Dp,
+    onWifiConnect: (Int, Int) -> Unit,
+    isConnectingWifi: Boolean
 ) {
+    // 교실 정보에서 학년반 파싱하는 함수
+    fun parseClassInfo(locationText: String): Pair<Int, Int>? {
+        // "105", "205", "301" 등의 형태에서 학년과 반 추출
+        if (locationText.length == 3 && locationText.all { it.isDigit() }) {
+            val grade = locationText[0].toString().toIntOrNull()
+            val classNumber = locationText.substring(1).toIntOrNull()
+            if (grade != null && classNumber != null && grade in 1..3 && classNumber in 1..11) {
+                return Pair(grade, classNumber)
+            }
+        }
+        return null
+    }
+
     Box(
         modifier = Modifier
             .size(cellSize)
@@ -340,13 +415,43 @@ private fun ScheduleCell(
                     maxLines = 1
                 )
 
-                // 교실/선생님 정보 (작은 글씨)
-                Text(
-                    text = displayLocation,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1
-                )
+                // 교실/선생님 정보와 WiFi 아이콘을 포함하는 Row
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    // 교실/선생님 정보 (작은 글씨)
+                    Text(
+                        text = displayLocation,
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        modifier = Modifier.weight(1f, false)
+                    )
+                    
+                    // 교실 정보가 파싱 가능한 경우 WiFi 아이콘 표시
+                    parseClassInfo(displayLocation)?.let { (grade, classNumber) ->
+                        Spacer(modifier = Modifier.width(2.dp))
+                        
+                        if (isConnectingWifi) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(12.dp),
+                                strokeWidth = 1.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Wifi,
+                                contentDescription = "WiFi 연결",
+                                modifier = Modifier
+                                    .size(12.dp)
+                                    .clickable {
+                                        onWifiConnect(grade, classNumber)
+                                    },
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
             }
         }
     }

@@ -9,14 +9,14 @@ plugins {
 
 android {
     namespace 'com.helgisnw.yangcheonlifeteacher'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.helgisnw.yangcheonlifeteacher"
         minSdk 26
-        targetSdk 34
-        versionCode 13
-        versionName "3.0"
+        targetSdk 35
+        versionCode 14
+        versionName "4.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

@@ -1,5 +1,6 @@
 package com.helgisnw.yangcheonlifeteacher.ui.screens
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Restaurant
@@ -7,6 +8,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.helgisnw.yangcheonlifeteacher.R
 import androidx.compose.ui.res.stringResource
@@ -53,7 +55,8 @@ fun MainScreen() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.TimeTable.route
+            startDestination = Screen.TimeTable.route,
+            modifier = androidx.compose.ui.Modifier.padding(innerPadding)
         ) {
             composable(Screen.TimeTable.route) { TimeTableScreen() }
             composable(Screen.Lunch.route) { LunchScreen() }
