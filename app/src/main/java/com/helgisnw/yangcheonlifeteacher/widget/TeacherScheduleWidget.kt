@@ -3,7 +3,6 @@ package com.helgisnw.yangcheonlifeteacher.widget
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,11 +41,18 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+private val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.KOREAN)
+
+private fun formatPeriodRange(start: LocalTime, end: LocalTime): String {
+    return "${TIME_FORMATTER.format(start)} ~ ${TIME_FORMATTER.format(end)}"
+}
+
 class TeacherScheduleWidget : GlanceAppWidget() {
 
     override val sizeMode: SizeMode = SizeMode.Responsive(
         setOf(
-            DpSize(200.dp, 110.dp), // medium
+            DpSize(160.dp, 110.dp), // compact
+            DpSize(220.dp, 140.dp), // standard
             DpSize(320.dp, 280.dp)  // large
         )
     )
@@ -109,6 +115,7 @@ class TeacherScheduleWidget : GlanceAppWidget() {
         return TeacherScheduleWidgetUiState.Content(
             headerDate = headerDate,
             teacherName = context.getString(R.string.widget_teacher_suffix_format, teacherName),
+            todayScheduleLabel = context.getString(R.string.widget_today_schedule_label),
             periodRows = periodRows,
             nextClass = nextClass,
             infoMessage = infoMessage,
@@ -133,12 +140,15 @@ class TeacherScheduleWidget : GlanceAppWidget() {
             val subject = displayValues?.first
             val destination = displayValues?.second
             val isCurrent = isCurrentPeriod(now, period)
+            val (startTime, endTime) = PERIOD_TIMES[period - 1]
             rows.add(
                 WidgetPeriodRow(
                     period = period,
                     subject = subject,
                     destination = destination,
-                    isCurrent = isCurrent
+                    isCurrent = isCurrent,
+                    startTime = startTime,
+                    endTime = endTime
                 )
             )
         }
@@ -176,8 +186,7 @@ class TeacherScheduleWidget : GlanceAppWidget() {
             }
 
             val durationLabel = if (status == NextClassStatus.ONGOING) {
-                val formatter = DateTimeFormatter.ofPattern("HH:mm")
-                "${formatter.format(start)} ~ ${formatter.format(end)}"
+                formatPeriodRange(start, end)
             } else null
 
             return WidgetNextClass(
@@ -268,6 +277,7 @@ private sealed interface TeacherScheduleWidgetUiState {
     data class Content(
         val headerDate: String,
         val teacherName: String,
+        val todayScheduleLabel: String,
         val periodRows: List<WidgetPeriodRow>,
         val nextClass: WidgetNextClass?,
         val infoMessage: String?,
@@ -288,7 +298,9 @@ private data class WidgetPeriodRow(
     val period: Int,
     val subject: String?,
     val destination: String?,
-    val isCurrent: Boolean
+    val isCurrent: Boolean,
+    val startTime: LocalTime,
+    val endTime: LocalTime
 )
 
 private data class WidgetNextClass(
@@ -311,14 +323,14 @@ enum class NextClassStatus {
 @OptIn(ExperimentalGlanceApi::class)
 private fun TeacherScheduleWidgetContent(state: TeacherScheduleWidgetUiState) {
     val size = LocalSize.current
-    val isLarge = size.height >= 220.dp
+    val isLarge = size.height >= 220.dp || size.width >= 280.dp
 
     when (state) {
         is TeacherScheduleWidgetUiState.Content -> {
             if (isLarge) {
                 LargeWidgetContent(state)
             } else {
-                MediumWidgetContent(state)
+                SmallWidgetContent(state)
             }
         }
 
@@ -339,7 +351,7 @@ private fun LargeWidgetContent(state: TeacherScheduleWidgetUiState.Content) {
         Text(
             text = state.headerDate,
             style = TextStyle(
-                fontWeight = FontWeight.Medium, 
+                fontWeight = FontWeight.Medium,
                 fontSize = 16.sp,
                 color = ColorProvider(R.color.widget_text_primary)
             )
@@ -348,8 +360,8 @@ private fun LargeWidgetContent(state: TeacherScheduleWidgetUiState.Content) {
             text = state.teacherName,
             modifier = GlanceModifier.fillMaxWidth(),
             style = TextStyle(
-                fontWeight = FontWeight.Bold, 
-                fontSize = 16.sp, 
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
                 textAlign = TextAlign.End,
                 color = ColorProvider(R.color.widget_text_primary)
             )
@@ -357,61 +369,60 @@ private fun LargeWidgetContent(state: TeacherScheduleWidgetUiState.Content) {
 
         Spacer(modifier = GlanceModifier.height(12.dp))
 
-        Row(modifier = GlanceModifier.fillMaxWidth()) {
-            state.periodRows.forEach { row ->
-                Text(
-                    text = row.period.toString(),
-                    modifier = GlanceModifier.padding(horizontal = 4.dp),
-                    style = TextStyle(
-                        fontSize = 12.sp,
-                        fontWeight = if (row.isCurrent) FontWeight.Bold else FontWeight.Normal,
-                        color = if (row.isCurrent) ColorProvider(R.color.md_theme_light_primary) else ColorProvider(R.color.widget_text_secondary),
-                        textAlign = TextAlign.Center
-                    )
+        Text(
+            text = state.nextClassLabel,
+            style = TextStyle(
+                fontSize = 12.sp,
+                color = ColorProvider(R.color.widget_text_secondary)
+            )
+        )
+        Spacer(modifier = GlanceModifier.height(6.dp))
+
+        val nextClass = state.nextClass
+        if (nextClass != null) {
+            NextClassHighlightLarge(
+                nextClass = nextClass,
+                inProgressLabel = state.inProgressLabel
+            )
+        } else {
+            Text(
+                text = state.nextClassFallbackMessage ?: state.noUpcomingLabel,
+                style = TextStyle(
+                    fontSize = 14.sp,
+                    fontStyle = FontStyle.Italic,
+                    color = ColorProvider(R.color.widget_text_secondary)
                 )
-            }
+            )
         }
+
+        Spacer(modifier = GlanceModifier.height(16.dp))
+
+        Text(
+            text = state.todayScheduleLabel,
+            style = TextStyle(
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = ColorProvider(R.color.widget_text_primary)
+            )
+        )
 
         Spacer(modifier = GlanceModifier.height(8.dp))
 
         if (!state.infoMessage.isNullOrBlank() && state.periodRows.all { it.subject.isNullOrBlank() }) {
-            CenteredMessage(title = state.infoMessage, body = "")
+            Text(
+                text = state.infoMessage,
+                style = TextStyle(
+                    fontSize = 14.sp,
+                    fontStyle = FontStyle.Italic,
+                    color = ColorProvider(R.color.widget_text_secondary)
+                )
+            )
         } else {
             Column(modifier = GlanceModifier.fillMaxWidth()) {
-                state.periodRows.forEach { row ->
-                    Row(
-                        modifier = GlanceModifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.Vertical.CenterVertically
-                    ) {
-                        Text(
-                            text = "${row.period}교시",
-                            style = TextStyle(
-                                fontWeight = FontWeight.Bold, 
-                                fontSize = 12.sp,
-                                color = ColorProvider(R.color.widget_text_primary)
-                            ),
-                            modifier = GlanceModifier.padding(end = 8.dp)
-                        )
-                        Column(modifier = GlanceModifier.fillMaxWidth()) {
-                            Text(
-                                text = row.subject ?: state.emptyPeriodLabel,
-                                style = TextStyle(
-                                    fontSize = 14.sp, 
-                                    fontWeight = if (row.isCurrent) FontWeight.Bold else FontWeight.Medium,
-                                    color = ColorProvider(R.color.widget_text_primary)
-                                ),
-                                modifier = GlanceModifier.fillMaxWidth()
-                            )
-                            row.destination?.let {
-                                Text(
-                                    text = it,
-                                    style = TextStyle(fontSize = 12.sp, color = ColorProvider(R.color.widget_text_secondary), textAlign = TextAlign.End),
-                                    modifier = GlanceModifier.fillMaxWidth()
-                                )
-                            }
-                        }
+                state.periodRows.forEachIndexed { index, row ->
+                    PeriodRow(row, state.emptyPeriodLabel)
+                    if (index != state.periodRows.lastIndex) {
+                        Spacer(modifier = GlanceModifier.height(4.dp))
                     }
                 }
             }
@@ -420,34 +431,110 @@ private fun LargeWidgetContent(state: TeacherScheduleWidgetUiState.Content) {
 }
 
 @Composable
-private fun MediumWidgetContent(state: TeacherScheduleWidgetUiState.Content) {
+private fun NextClassHighlightLarge(
+    nextClass: WidgetNextClass,
+    inProgressLabel: String
+) {
+    val backgroundColorRes = if (nextClass.status == NextClassStatus.ONGOING) {
+        R.color.md_theme_light_primaryContainer
+    } else {
+        R.color.widget_period_background
+    }
+    val statusColorRes = if (nextClass.status == NextClassStatus.ONGOING) {
+        R.color.md_theme_light_primary
+    } else {
+        R.color.widget_text_secondary
+    }
+
+    Column(
+        modifier = GlanceModifier
+            .fillMaxWidth()
+            .background(ColorProvider(backgroundColorRes))
+            .padding(12.dp)
+    ) {
+        Text(
+            text = nextClass.subject,
+            style = TextStyle(
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = ColorProvider(R.color.widget_text_primary)
+            )
+        )
+        nextClass.destination?.let {
+            Spacer(modifier = GlanceModifier.height(4.dp))
+            Text(
+                text = it,
+                style = TextStyle(fontSize = 12.sp, color = ColorProvider(R.color.widget_text_secondary))
+            )
+        }
+        Spacer(modifier = GlanceModifier.height(6.dp))
+        Text(
+            text = formatPeriodRange(nextClass.startTime, nextClass.endTime),
+            style = TextStyle(fontSize = 12.sp, color = ColorProvider(R.color.widget_text_secondary))
+        )
+        Spacer(modifier = GlanceModifier.height(6.dp))
+        Row(modifier = GlanceModifier.fillMaxWidth()) {
+            Text(
+                text = "${nextClass.period}교시",
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = ColorProvider(R.color.widget_text_primary)
+                )
+            )
+            Text(
+                text = when (nextClass.status) {
+                    NextClassStatus.ONGOING -> nextClass.durationLabel ?: inProgressLabel
+                    NextClassStatus.UPCOMING -> nextClass.timeLabel ?: ""
+                },
+                modifier = GlanceModifier.fillMaxWidth(),
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.End,
+                    color = ColorProvider(statusColorRes)
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun SmallWidgetContent(state: TeacherScheduleWidgetUiState.Content) {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
             .background(ColorProvider(R.color.widget_background))
-            .padding(16.dp),
+            .padding(12.dp),
     ) {
+        Text(
+            text = state.headerDate,
+            style = TextStyle(
+                fontSize = 12.sp,
+                color = ColorProvider(R.color.widget_text_secondary)
+            )
+        )
+        Spacer(modifier = GlanceModifier.height(2.dp))
         Text(
             text = state.teacherName,
             style = TextStyle(
-                fontSize = 14.sp, 
-                fontWeight = FontWeight.Medium, 
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
                 color = ColorProvider(R.color.widget_text_primary)
             )
-        )
-        Spacer(modifier = GlanceModifier.height(4.dp))
-        Text(
-            text = state.nextClassLabel,
-            style = TextStyle(fontSize = 12.sp, color = ColorProvider(R.color.widget_text_secondary))
         )
         Spacer(modifier = GlanceModifier.height(6.dp))
 
         val nextClass = state.nextClass
         if (nextClass != null) {
             Text(
+                text = state.nextClassLabel,
+                style = TextStyle(fontSize = 12.sp, color = ColorProvider(R.color.widget_text_secondary))
+            )
+            Spacer(modifier = GlanceModifier.height(4.dp))
+            Text(
                 text = nextClass.subject,
                 style = TextStyle(
-                    fontSize = 18.sp, 
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = ColorProvider(R.color.widget_text_primary)
                 )
@@ -459,35 +546,87 @@ private fun MediumWidgetContent(state: TeacherScheduleWidgetUiState.Content) {
                     style = TextStyle(fontSize = 12.sp, color = ColorProvider(R.color.widget_text_secondary))
                 )
             }
-            Spacer(modifier = GlanceModifier.height(8.dp))
+            Spacer(modifier = GlanceModifier.height(6.dp))
             Text(
-                text = "${nextClass.period}교시",
-                style = TextStyle(
-                    fontSize = 12.sp, 
-                    fontWeight = FontWeight.Medium,
-                    color = ColorProvider(R.color.widget_text_primary)
-                )
+                text = formatPeriodRange(nextClass.startTime, nextClass.endTime),
+                style = TextStyle(fontSize = 12.sp, color = ColorProvider(R.color.widget_text_secondary))
             )
-            if (nextClass.status == NextClassStatus.ONGOING) {
-                Text(
-                    text = nextClass.durationLabel ?: state.inProgressLabel,
-                    style = TextStyle(fontSize = 12.sp, color = ColorProvider(R.color.widget_text_secondary))
-                )
-            } else {
-                Text(
-                    text = nextClass.timeLabel ?: "",
-                    style = TextStyle(
-                        fontSize = 12.sp, 
-                        color = ColorProvider(R.color.widget_text_primary)
+            Spacer(modifier = GlanceModifier.height(2.dp))
+            Text(
+                text = when (nextClass.status) {
+                    NextClassStatus.ONGOING -> nextClass.durationLabel ?: state.inProgressLabel
+                    NextClassStatus.UPCOMING -> nextClass.timeLabel ?: state.noUpcomingLabel
+                },
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = ColorProvider(
+                        if (nextClass.status == NextClassStatus.ONGOING) R.color.md_theme_light_primary
+                        else R.color.widget_text_primary
                     )
                 )
-            }
+            )
         } else {
             Text(
                 text = state.nextClassFallbackMessage ?: state.noUpcomingLabel,
                 style = TextStyle(
-                    fontSize = 14.sp, 
+                    fontSize = 14.sp,
                     fontStyle = FontStyle.Italic,
+                    color = ColorProvider(R.color.widget_text_secondary)
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun PeriodRow(row: WidgetPeriodRow, emptyLabel: String) {
+    val rowBackground = if (row.isCurrent) {
+        R.color.md_theme_light_primaryContainer
+    } else {
+        R.color.widget_period_background
+    }
+
+    Column(
+        modifier = GlanceModifier
+            .fillMaxWidth()
+            .background(ColorProvider(rowBackground))
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        Row(modifier = GlanceModifier.fillMaxWidth()) {
+            Text(
+                text = "${row.period}교시",
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ColorProvider(R.color.widget_text_primary)
+                )
+            )
+            Text(
+                text = formatPeriodRange(row.startTime, row.endTime),
+                modifier = GlanceModifier.fillMaxWidth(),
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.End,
+                    color = ColorProvider(R.color.widget_text_secondary)
+                )
+            )
+        }
+        Spacer(modifier = GlanceModifier.height(4.dp))
+        Text(
+            text = row.subject ?: emptyLabel,
+            style = TextStyle(
+                fontSize = 14.sp,
+                fontWeight = if (row.isCurrent) FontWeight.Bold else FontWeight.Medium,
+                color = ColorProvider(R.color.widget_text_primary)
+            )
+        )
+        row.destination?.let {
+            Spacer(modifier = GlanceModifier.height(2.dp))
+            Text(
+                text = it,
+                style = TextStyle(
+                    fontSize = 12.sp,
                     color = ColorProvider(R.color.widget_text_secondary)
                 )
             )

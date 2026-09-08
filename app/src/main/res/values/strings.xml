@@ -79,4 +79,5 @@
     <string name="widget_in_progress_label">진행 중</string>
     <string name="widget_no_upcoming_class">다음 수업이 없습니다.</string>
     <string name="widget_empty_period">수업 없음</string>
+    <string name="widget_today_schedule_label">오늘 시간표</string>
 </resources>
